@@ -1,0 +1,47 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# local env files (PENTING: Jangan bocorkan kredensial)
+.env
+.env*.local
+.env.production
+
+# folder sistem / container bawaan
+mnt/
+
+# dokumen prompt & spesifikasi internal (agar tidak terekspos ke publik)
+AGENTS.md
+BOARDING_PASS.md
+DESIGN.md
+PROMPTS.md
+TYPING_GAME.md
+# Catatan: README.md tetap disimpan untuk deskripsi di GitHub
+
+# debug & logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# misc & OS
+.DS_Store
+*.pem
+.chrome-temp*
+Thumbs.db
+.vscode/
+.idea/

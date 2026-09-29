@@ -1,0 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=Borel&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+@import "./fonts.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: SF;
+  src: url("/Inter-VariableFont_opsz,wght.ttf");
+}
+@font-face {
+  font-family: Piazzolla;
+  src: url("/Piazzolla-VariableFont_opsz,wght.ttf");
+}
+@font-face {
+  font-family: "Caveat";
+  src: url("/Caveat-VariableFont_wght.ttf");
+}
+@font-face {
+  font-family: "Monocraft";
+  src: url("/Monocraft.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Borel";
+  src: url("/Borel-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --bg: #FBFAF9;
+  --base: #302f2d;
+  --surface: #FFFFFF;
+  --surface-muted: #f5f5f5;
+  --text: #302f2d;
+  --text-muted: rgba(48, 47, 45, 0.6);
+  --paper: #FAF8F5;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    letter-spacing: -0.5px;
+  }
+
+  html {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #FBFAF9;
+    color: #302f2d;
+    font-family: "Poppins", sans-serif;
+    letter-spacing: -0.5px;
+    min-height: 100vh;
+    overflow: visible;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: rgba(48, 47, 45, 0.15);
+    color: #302f2d;
+  }
+}
+
+body {
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.5px;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (pointer: fine) {
+  body {
+    cursor: none;
+  }
+
+  * {
+    cursor: none !important;
+  }
+}
+
+.serif {
+  letter-spacing: -0.5px;
+  font-family: "Caveat", cursive, serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-borel {
+  font-family: "Borel", cursive !important;
+  font-weight: 400 !important;
+  letter-spacing: normal !important;
+  font-feature-settings: "liga" 1, "calt" 1 !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+.bg-base {
+  background-color: #302f2d;
+}
+
+.border-custom-dashed {
+  border-style: dashed;
+  border-image: repeating-linear-gradient(
+    to right,
+    currentColor 0,
+    currentColor 20px,
+    transparent 20px,
+    transparent 40px
+  ) 1;
+}
+
+.border-long-dashed {
+  border: 1px dashed transparent;
+  background: 
+    linear-gradient(white, white) padding-box,
+    repeating-linear-gradient(
+      to bottom,
+      currentColor 0px,
+      currentColor 15px,
+      transparent 15px,
+      transparent 28px
+    ) border-box;
+}
+
+.border-long-dashed2 {
+  border-top: 2px dashed transparent;
+  background: 
+    linear-gradient(white, white) padding-box,
+    repeating-linear-gradient(
+      to right,
+      currentColor 0px,
+      currentColor 15px,
+      transparent 15px,
+      transparent 28px
+    ) border-box;
+}
