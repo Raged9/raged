@@ -37,7 +37,7 @@ export default function Footer() {
   return (
     <footer
       id="contact"
-      className="flex flex-col w-full max-w-304 mx-auto px-6 sm:px-9 py-16 sm:py-24"
+      className="flex flex-col w-full max-w-304 mx-auto px-6 sm:px-9 pt-16 sm:pt-24 pb-8 sm:pb-12"
     >
       <div className="bg-[#f5f5f5] border border-black/5 rounded-3xl p-8 sm:p-12 md:p-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-start">
@@ -167,8 +167,8 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Footer Bottom Bar */}
-      <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-base/40 gap-4">
+      {/* Footer Bottom Bar (Moved ABOVE Dino dot matrix) */}
+      <div className="pt-10 flex flex-col sm:flex-row items-center justify-between text-xs text-base/40 gap-4">
         <p>© {new Date().getFullYear()} Edgar (&quot;Raged&quot;). All rights reserved.</p>
         <p className="font-mono text-[11px]">Designed in the spirit of Tayo & built with Next.js</p>
       </div>

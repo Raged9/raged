@@ -116,23 +116,22 @@ export function BoardingPass({
   const settle = { type: "spring", duration: 0.28, bounce: 0 } as const;
   const immediate = { duration: 0 };
 
-  // Sound effects: fiber snapping as perforation tears
-  const prevBrokenRef = useRef(0);
+  // Sound effects: fiber snapping only during active user interaction
+  const isMountedRef = useRef(false);
+  const prevBrokenRef = useRef(brokenBridges(progress));
   useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      prevBrokenRef.current = brokenBridges(progress);
+      return;
+    }
     const currentBroken = brokenBridges(progress);
-    if (currentBroken > prevBrokenRef.current && progress < 1) {
+    if (currentBroken > prevBrokenRef.current && progress < 1 && dragging) {
       const delta = currentBroken - prevBrokenRef.current;
       playFiberSnapSound(Math.min(2.5, 0.9 + delta * 0.2));
     }
     prevBrokenRef.current = currentBroken;
-  }, [progress]);
-
-  // Full rip sound when stub is detached completely
-  useEffect(() => {
-    if (detach >= 1) {
-      playFullTearSound();
-    }
-  }, [detach]);
+  }, [progress, dragging]);
 
   function move(event: PointerEvent<HTMLButtonElement>) {
     const state = gesture.current;

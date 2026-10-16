@@ -180,7 +180,7 @@ export default function Projects({ projects }: ProjectsProps) {
 
       {/* Case Study Modal (Clean, Light, Tayo Aesthetic) */}
       <AnimatePresence>
-        {selectedCaseStudy && (
+        {selectedCaseStudy && selectedCaseStudy.caseStudy && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm"
             onClick={() => setSelectedCaseStudy(null)}

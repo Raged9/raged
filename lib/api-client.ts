@@ -104,6 +104,16 @@ export interface TypingScoreItem {
   createdAt?: string;
 }
 
+export interface OffScreenPhotoItem {
+  id: string;
+  caption: string;
+  imageUrl?: string;
+  order: number;
+  rotation?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export const api = {
   // Health
   checkHealth: () => apiFetch<{ status: string; service: string }>("/api/health"),
@@ -124,6 +134,19 @@ export const api = {
   deleteProject: (id: string) =>
     apiFetch<{ success: boolean; message: string }>(`/api/projects/${id}`, {
       method: "DELETE",
+    }),
+
+  // Off-Screen Photos
+  getPhotos: () => apiFetch<OffScreenPhotoItem[]>("/api/photos"),
+  updatePhoto: (id: string, data: Partial<OffScreenPhotoItem>) =>
+    apiFetch<OffScreenPhotoItem>(`/api/photos/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  updateAllPhotos: (photos: OffScreenPhotoItem[]) =>
+    apiFetch<OffScreenPhotoItem[]>("/api/photos", {
+      method: "PUT",
+      body: JSON.stringify({ photos }),
     }),
 
   // Typing Game

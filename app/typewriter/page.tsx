@@ -10,9 +10,9 @@ export const metadata = {
 export default function TypewriterPage() {
   return (
     <main className="min-h-screen relative flex flex-col items-center justify-between bg-[#FBFAF9] text-[#302f2d] px-4 py-8">
-      {/* Tayo's distinctive dashed vertical margin lines */}
-      <div className="hidden lg:block h-full min-h-screen z-20 absolute left-8 xl:left-24 border text-black/10 border-long-dashed pointer-events-none" />
-      <div className="hidden lg:block h-full min-h-screen z-20 absolute right-8 xl:right-24 border text-black/10 border-long-dashed pointer-events-none" />
+      {/* Tayo's distinctive dashed vertical margin lines (background layer) */}
+      <div className="hidden lg:block h-full min-h-screen z-0 absolute left-8 xl:left-24 border text-black/10 border-long-dashed pointer-events-none" />
+      <div className="hidden lg:block h-full min-h-screen z-0 absolute right-8 xl:right-24 border text-black/10 border-long-dashed pointer-events-none" />
 
       {/* Top Navbar */}
       <div className="w-full max-w-304 mx-auto px-6 md:px-9 flex items-center justify-between py-4">

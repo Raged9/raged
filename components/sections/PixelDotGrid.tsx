@@ -1,69 +1,194 @@
 "use client";
 
-import React, { useRef, useCallback, useEffect } from "react";
+import React, { useRef, useCallback, useEffect, useState } from "react";
 
-// 36x36 Pixel Art Matrix sampled and refined from public/porto-icon.jpg (Edgar Avatar)
-const ICON_MATRIX_36 = [
-  "....................................",
-  "....................................",
-  "....................####............",
-  ".............##############.........",
-  "...........##################.......",
-  "..........####################......",
-  ".........######################.....",
-  "........#######################.....",
-  ".......#########################....",
-  ".......##############....#######....",
-  "......##############......######....",
-  "......##############......#######...",
-  ".....###############......#######...",
-  ".....###############......#######...",
-  ".....###############......######....",
-  ".....################....#######....",
-  "......################..#######.....",
-  "......##############..#########.....",
-  "......#############...######.##.....",
-  ".......#####...####...##.###.##.....",
-  ".......#####...##....###.###.##.....",
-  ".......#####...##....###.###.##.....",
-  ".......##.#....##....###.###.##.....",
-  "........###.....##..###...##.#......",
-  "........####.......##......###......",
-  "..........##.......#####...##.......",
-  "...........##..............##.......",
-  "...........###............##........",
-  "............###..........###........",
-  "..................##....###.........",
-  "..................########..........",
-  "....................................",
-  "....................................",
-  "....................................",
-  "....................................",
-  "....................................",
+const COLS = 32;
+const ROWS = 32;
+
+// 1. Icon Avatar (Porto Icon) - Centered in 32x32 (28w x 29h, zero clipped dots)
+const ICON_MATRIX_32 = [
+  "................................",
+  ".................####...........",
+  "..........##############........",
+  "........##################......",
+  ".......####################.....",
+  "......######################....",
+  ".....#######################....",
+  "....#########################...",
+  "....##############....#######...",
+  "...##############......######...",
+  "...##############......#######..",
+  "..###############......#######..",
+  "..###############......#######..",
+  "..###############......######...",
+  "..################....#######...",
+  "...################..#######....",
+  "...##############..#########....",
+  "...#############...######.##....",
+  "....#####...####...##.###.##....",
+  "....#####...##....###.###.##....",
+  "....#####...##....###.###.##....",
+  "....##.#....##....###.###.##....",
+  ".....###.....##..###...##.#.....",
+  ".....####.......##......###.....",
+  ".......##.......#####...##......",
+  "........##..............##......",
+  "........###............##.......",
+  ".........###..........###.......",
+  "...............##....###........",
+  "...............########.........",
+  "................................",
+  "................................",
 ];
 
-const COLS = 36;
-const ROWS = 36;
+// 2. Edgar Dog - Centered in 32x32 (32w x 32h, zero clipped dots)
+const DOG_MATRIX_32 = [
+  "................####............",
+  "..............########..........",
+  ".............##########.........",
+  "..........##############........",
+  ".........#.....#########........",
+  "......##.......####..####.......",
+  ".....#####.....###....####......",
+  "....#######.....##.##..####.....",
+  "...########......#.##..#####....",
+  "..##########.......###..####....",
+  ".###########.......####.####....",
+  "#######..###.......####.######..",
+  "######.#####........###......#..",
+  "######.#####.............##..##.",
+  "######.####..............##...#.",
+  ".#####..###...................#.",
+  "..####.####.....#######.......#.",
+  "...#######...############.....#.",
+  "....###.....##############....#.",
+  "....##.....###############....#.",
+  "....##..#..###############...#..",
+  "....##.###.###############...#..",
+  ".....#.....##############.......",
+  ".....#.....##############..#....",
+  ".....#......############..##....",
+  "......#......########....#####..",
+  ".......#................##...#..",
+  "........#####.........#####.....",
+  "...........###.......######...#.",
+  ".............##############...##",
+  "..........#...#############....#",
+  "........##.....############....#",
+];
 
-// Pre-compute lookup table for dark icon dots (1 = icon dot, 0 = faint background dot)
-const IS_DARK = new Uint8Array(COLS * ROWS);
-for (let r = 0; r < ROWS; r++) {
-  const rowStr = ICON_MATRIX_36[r] || "";
-  for (let c = 0; c < COLS; c++) {
-    if (rowStr[c] === "#") {
-      IS_DARK[r * COLS + c] = 1;
+// 3. Code Symbol (</>) - Centered in 32x32 (28w x 23h, zero clipped dots)
+const CODE_MATRIX_32 = [
+  "................................",
+  "................................",
+  "................................",
+  "................................",
+  "...................##...........",
+  "...................##...........",
+  "..................##............",
+  "..................##............",
+  "..................##............",
+  "........##.......##...##........",
+  ".......##........##....##.......",
+  "......##........##......##......",
+  ".....##.........##.......##.....",
+  "....##.........##.........##....",
+  "...##..........##..........##...",
+  "..##...........##...........##..",
+  "...##.........##...........##...",
+  "....##........##..........##....",
+  ".....##......##..........##.....",
+  "......##.....##.........##......",
+  ".......##....##........##.......",
+  "........##..##........##........",
+  "............##..................",
+  "...........##...................",
+  "...........##...................",
+  "...........##...................",
+  "..........##....................",
+  "................................",
+  "................................",
+  "................................",
+  "................................",
+  "................................",
+];
+
+function parseMatrix(matrix: string[]): Uint8Array {
+  const arr = new Uint8Array(COLS * ROWS);
+  for (let r = 0; r < ROWS; r++) {
+    const rowStr = matrix[r] || "";
+    for (let c = 0; c < COLS; c++) {
+      if (rowStr[c] === "#") {
+        arr[r * COLS + c] = 1;
+      }
     }
   }
+  return arr;
 }
 
+// Pre-compute lookup tables for the 3 variations (1 = dark dot, 0 = faint dot)
+const MATRICES = [
+  parseMatrix(ICON_MATRIX_32),
+  parseMatrix(DOG_MATRIX_32),
+  parseMatrix(CODE_MATRIX_32),
+];
+
+const PATTERN_NAMES = [
+  "Edgar Avatar",
+  "Edgar the Dog",
+  "Code Symbol",
+];
+
 export default function PixelDotGrid() {
+  const [patternIndex, setPatternIndex] = useState(0);
+  const patternIndexRef = useRef(0);
+
   const gridRef = useRef<HTMLDivElement>(null);
   const dotElementsRef = useRef<(HTMLDivElement | null)[]>([]);
   const timersRef = useRef<Map<number, NodeJS.Timeout>>(new Map());
   const currentHoveredIdxRef = useRef<number | null>(null);
   const lastPosRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Smoothly schedule fade back to base color
+  // Switch to next pattern with smooth transition
+  const switchPattern = useCallback((nextIdx: number) => {
+    patternIndexRef.current = nextIdx;
+    setPatternIndex(nextIdx);
+
+    // Cancel all pending hover fade timers
+    timersRef.current.forEach((t) => clearTimeout(t));
+    timersRef.current.clear();
+
+    const nextMatrix = MATRICES[nextIdx];
+    const isReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const duration = isReduced ? "0ms" : "700ms";
+
+    // Direct DOM batch transition for 60fps morphing without layout thrashing
+    const dots = dotElementsRef.current;
+    for (let i = 0; i < COLS * ROWS; i++) {
+      const el = dots[i];
+      if (el) {
+        el.style.transition = `background-color ${duration} ease-in-out, transform ${duration} ease-out, box-shadow ${duration} ease-out`;
+        el.style.boxShadow = "none";
+        el.style.transform = "scale(1)";
+        const isDark = nextMatrix[i] === 1;
+        el.style.backgroundColor = isDark ? "#18181b" : "rgba(0, 0, 0, 0.06)";
+      }
+    }
+  }, []);
+
+  // 5-second automatic rotation between the 3 patterns
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const next = (patternIndexRef.current + 1) % MATRICES.length;
+      switchPattern(next);
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [switchPattern]);
+
+  // Smoothly schedule fade back to current pattern base color
   const scheduleFade = useCallback((idx: number, isDark: boolean) => {
     // If user's cursor is currently resting directly on this cell, don't fade yet
     if (currentHoveredIdxRef.current === idx) return;
@@ -81,7 +206,9 @@ export default function PixelDotGrid() {
         el.style.transition =
           "background-color 800ms ease-out, transform 800ms ease-out, box-shadow 800ms ease-out";
         el.style.boxShadow = "none";
-        if (isDark) {
+        // Check current pattern state
+        const currentDark = MATRICES[patternIndexRef.current][idx] === 1;
+        if (currentDark) {
           el.style.backgroundColor = "#18181b";
           el.style.transform = "scale(1)";
         } else {
@@ -102,7 +229,7 @@ export default function PixelDotGrid() {
       const el = dotElementsRef.current[idx];
       if (!el) return;
 
-      const isDark = IS_DARK[idx] === 1;
+      const isDark = MATRICES[patternIndexRef.current][idx] === 1;
 
       // Cancel existing timer
       const existing = timersRef.current.get(idx);
@@ -132,13 +259,12 @@ export default function PixelDotGrid() {
     [scheduleFade]
   );
 
-  // Activate dots within refined brush radius (~0.92 cell units: 1-2 dots wide, sleeker than before)
+  // Activate dots within refined brush radius (~0.92 cell units: 1-2 dots wide)
   const activateAtCoord = useCallback(
     (x: number, y: number, width: number, height: number) => {
       const colFloat = (x / width) * COLS;
       const rowFloat = (y / height) * ROWS;
 
-      // Refined brush radius: smaller than 1.35, but larger than initial single dot (covers 1-2 dots wide)
       const radius = 0.92;
       const minR = Math.max(0, Math.floor(rowFloat - radius));
       const maxR = Math.min(ROWS - 1, Math.ceil(rowFloat + radius));
@@ -181,7 +307,6 @@ export default function PixelDotGrid() {
         const dx = currX - lastPos.x;
         const dy = currY - lastPos.y;
         const dist = Math.hypot(dx, dy);
-        // Step every ~3.5px along the line for continuous stroke
         const step = 3.5;
         const steps = Math.max(1, Math.ceil(dist / step));
         for (let i = 1; i <= steps; i++) {
@@ -210,7 +335,7 @@ export default function PixelDotGrid() {
       if (currentHoveredIdxRef.current === idx) {
         currentHoveredIdxRef.current = null;
       }
-      scheduleFade(idx, IS_DARK[idx] === 1);
+      scheduleFade(idx, MATRICES[patternIndexRef.current][idx] === 1);
     },
     [scheduleFade]
   );
@@ -220,7 +345,7 @@ export default function PixelDotGrid() {
     if (currentHoveredIdxRef.current !== null) {
       const prev = currentHoveredIdxRef.current;
       currentHoveredIdxRef.current = null;
-      scheduleFade(prev, IS_DARK[prev] === 1);
+      scheduleFade(prev, MATRICES[patternIndexRef.current][prev] === 1);
     }
   }, [scheduleFade]);
 
@@ -233,9 +358,11 @@ export default function PixelDotGrid() {
     };
   }, []);
 
+  const activeDark = MATRICES[patternIndex];
+
   return (
     <div className="relative flex items-center justify-center select-none bg-transparent touch-none">
-      {/* 36x36 Dot Matrix Pixel Art */}
+      {/* 32x32 Dot Matrix Pixel Art */}
       <div
         ref={gridRef}
         onPointerMove={handlePointerMove}
@@ -244,10 +371,10 @@ export default function PixelDotGrid() {
         style={{
           gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
         }}
-        aria-label="Interactive Pixel Art Matrix"
+        aria-label={`Interactive Pixel Art Matrix - ${PATTERN_NAMES[patternIndex]}`}
       >
         {Array.from({ length: COLS * ROWS }).map((_, index) => {
-          const isDark = IS_DARK[index] === 1;
+          const isDark = activeDark[index] === 1;
 
           return (
             <div

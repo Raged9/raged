@@ -13,7 +13,6 @@
 # production
 /build
 
-# local env files (PENTING: Jangan bocorkan kredensial)
 .env
 .env*.local
 .env.production
@@ -27,6 +26,7 @@ BOARDING_PASS.md
 DESIGN.md
 PROMPTS.md
 TYPING_GAME.md
+README.md
 # Catatan: README.md tetap disimpan untuk deskripsi di GitHub
 
 # debug & logs
@@ -42,6 +42,7 @@ next-env.d.ts
 .DS_Store
 *.pem
 .chrome-temp*
+cloudflared.exe
 Thumbs.db
 .vscode/
 .idea/

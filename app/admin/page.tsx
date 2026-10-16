@@ -15,13 +15,17 @@ import {
   Layers,
   Save,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Camera
 } from 'lucide-react';
-import { api, ProjectItem, removeToken } from '@/lib/api-client';
+import { api, ProjectItem, OffScreenPhotoItem, removeToken } from '@/lib/api-client';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'projects' | 'photos'>('projects');
   const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const [photos, setPhotos] = useState<OffScreenPhotoItem[]>([]);
+  const [isSavingPhotos, setIsSavingPhotos] = useState(false);
   const [adminUser, setAdminUser] = useState<{ id: string; email: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -46,22 +50,46 @@ export default function AdminDashboardPage() {
     api.getAdminMe()
       .then((res) => {
         setAdminUser(res.user);
-        loadProjects();
+        loadData();
       })
       .catch(() => {
         router.push('/admin/login');
       });
   }, [router]);
 
-  const loadProjects = async () => {
+  const loadData = async () => {
     setIsLoading(true);
     try {
-      const data = await api.getProjects();
-      setProjects(data);
+      const [projData, photoData] = await Promise.all([
+        api.getProjects().catch(() => []),
+        api.getPhotos().catch(() => []),
+      ]);
+      setProjects(projData);
+      setPhotos(photoData);
     } catch (err) {
-      console.warn('Failed to fetch projects:', err);
+      console.warn('Failed to fetch data:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePhotoChange = (id: string, field: keyof OffScreenPhotoItem, value: any) => {
+    setPhotos((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+    );
+  };
+
+  const handleSaveAllPhotos = async () => {
+    setIsSavingPhotos(true);
+    try {
+      const updated = await api.updateAllPhotos(photos);
+      setPhotos(updated);
+      setStatusMessage({ type: 'success', text: 'All 8 Off-Screen Polaroid photos saved successfully!' });
+      setTimeout(() => setStatusMessage(null), 3000);
+    } catch (err: any) {
+      setStatusMessage({ type: 'error', text: err.message || 'Failed to update photos' });
+    } finally {
+      setIsSavingPhotos(false);
     }
   };
 
@@ -223,24 +251,52 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* Dashboard Title & Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-white uppercase">
-              Portfolio Projects Manager
-            </h1>
-            <p className="text-neutral-400 text-sm mt-1">
-              Create, update, reorder, or remove showcase items in real-time.
-            </p>
-          </div>
-
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-3 border-b border-neutral-800 pb-3">
           <button
-            onClick={handleOpenAddModal}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#3E4F36] hover:bg-[#2E3B27] text-white font-bold text-sm transition-colors shadow-lg self-start sm:self-auto border border-[#A3B899]/30"
+            onClick={() => setActiveTab('projects')}
+            className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
+              activeTab === 'projects'
+                ? 'bg-[#3E4F36] text-white border border-[#A3B899]/40 shadow-md'
+                : 'bg-neutral-900/60 text-neutral-400 hover:text-white border border-transparent'
+            }`}
           >
-            <Plus className="w-4 h-4" /> Add New Project
+            <Layers className="w-4 h-4" />
+            Projects & Carousel ({projects.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('photos')}
+            className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
+              activeTab === 'photos'
+                ? 'bg-[#3E4F36] text-white border border-[#A3B899]/40 shadow-md'
+                : 'bg-neutral-900/60 text-neutral-400 hover:text-white border border-transparent'
+            }`}
+          >
+            <Camera className="w-4 h-4" />
+            Off-Screen Photos ({photos.length})
           </button>
         </div>
+
+        {activeTab === 'projects' ? (
+          <>
+            {/* Dashboard Title & Actions */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
+              <div>
+                <h1 className="text-3xl font-black tracking-tight text-white uppercase">
+                  Portfolio Projects Manager
+                </h1>
+                <p className="text-neutral-400 text-sm mt-1">
+                  Create, update, reorder, or remove showcase & carousel items in real-time.
+                </p>
+              </div>
+
+              <button
+                onClick={handleOpenAddModal}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#3E4F36] hover:bg-[#2E3B27] text-white font-bold text-sm transition-colors shadow-lg self-start sm:self-auto border border-[#A3B899]/30"
+              >
+                <Plus className="w-4 h-4" /> Add New Project
+              </button>
+            </div>
 
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -330,6 +386,131 @@ export default function AdminDashboardPage() {
             </div>
           ))}
         </div>
+      </>
+      ) : (
+        /* Off-Screen Photo Cards CMS Tab */
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
+            <div>
+              <h1 className="text-3xl font-black tracking-tight text-white uppercase flex items-center gap-2.5">
+                <Camera className="w-7 h-7 text-[#A3B899]" />
+                Off-Screen Photos Manager
+              </h1>
+              <p className="text-neutral-400 text-sm mt-1">
+                Manage the 8 Polaroid photo cards displayed in the &quot;off screen.&quot; section. Paste image URLs to display real photos or leave empty to use default placeholders.
+              </p>
+            </div>
+
+            <button
+              onClick={handleSaveAllPhotos}
+              disabled={isSavingPhotos}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#3E4F36] hover:bg-[#2E3B27] text-white font-bold text-sm transition-all shadow-lg self-start sm:self-auto border border-[#A3B899]/30 disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              {isSavingPhotos ? "Saving Changes..." : "Save All Photos"}
+            </button>
+          </div>
+
+          {/* Photos 4-column responsive grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            {photos.map((photo, idx) => (
+              <div
+                key={photo.id || idx}
+                className="bg-[#181818] border border-neutral-800 rounded-xl p-4 flex flex-col justify-between shadow-lg group hover:border-neutral-700 transition-colors"
+              >
+                {/* Mini Polaroid Preview */}
+                <div className="flex justify-center py-2">
+                  <div
+                    className="bg-white p-2 pb-5 rounded-xs shadow-md border border-black/10 w-28 transition-transform duration-200"
+                    style={{ transform: `rotate(${photo.rotation || 0}deg)` }}
+                  >
+                    <div className="w-full aspect-[4/5] bg-neutral-200 rounded-xs overflow-hidden flex items-center justify-center relative">
+                      {photo.imageUrl ? (
+                        <img
+                          src={photo.imageUrl}
+                          alt={photo.caption}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-neutral-400 p-1 text-center">
+                          <Camera className="w-5 h-5 mb-1 opacity-50" />
+                          <span className="text-[9px] font-mono leading-none">Placeholder #{photo.order}</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="serif text-[9px] text-neutral-600 text-center mt-1 truncate">
+                      {photo.caption || "photo caption"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Edit inputs */}
+                <div className="space-y-3 mt-3 pt-3 border-t border-neutral-800">
+                  <div>
+                    <label className="text-[11px] font-mono text-neutral-400 block mb-1">
+                      Caption / Title
+                    </label>
+                    <input
+                      type="text"
+                      value={photo.caption}
+                      onChange={(e) => handlePhotoChange(photo.id, "caption", e.target.value)}
+                      placeholder="e.g. morning coffee"
+                      className="w-full px-2.5 py-1.5 rounded bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-mono text-neutral-400 block mb-1">
+                      Image URL (or /image.jpg)
+                    </label>
+                    <input
+                      type="text"
+                      value={photo.imageUrl || ""}
+                      onChange={(e) => handlePhotoChange(photo.id, "imageUrl", e.target.value)}
+                      placeholder="Paste image link or leave empty..."
+                      className="w-full px-2.5 py-1.5 rounded bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[11px] font-mono text-neutral-400 block mb-1">
+                        Rotation (&deg;)
+                      </label>
+                      <select
+                        value={photo.rotation || 0}
+                        onChange={(e) => handlePhotoChange(photo.id, "rotation", Number(e.target.value))}
+                        className="w-full px-2 py-1.5 rounded bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899]"
+                      >
+                        <option value="-6">-6&deg; (Left)</option>
+                        <option value="-4">-4&deg;</option>
+                        <option value="-3">-3&deg;</option>
+                        <option value="-1">-1&deg;</option>
+                        <option value="0">0&deg; (Flat)</option>
+                        <option value="1">+1&deg;</option>
+                        <option value="3">+3&deg;</option>
+                        <option value="5">+5&deg; (Right)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-mono text-neutral-400 block mb-1">
+                        Order
+                      </label>
+                      <input
+                        type="number"
+                        value={photo.order}
+                        onChange={(e) => handlePhotoChange(photo.id, "order", Number(e.target.value))}
+                        className="w-full px-2 py-1.5 rounded bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       </main>
 
       {/* Create / Edit Project Modal */}
