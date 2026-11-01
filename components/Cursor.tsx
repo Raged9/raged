@@ -5,12 +5,17 @@ import { useEffect, useRef, useState } from "react";
 export default function Cursor() {
   const [enabled, setEnabled] = useState(false);
   const planeRef = useRef<HTMLDivElement>(null);
+  const rightSvgRef = useRef<SVGSVGElement>(null);
+  const leftSvgRef = useRef<SVGSVGElement>(null);
   const trailsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   const TRAIL_COUNT = 5;
   const targetPos = useRef({ x: -100, y: -100 });
   const currentPos = useRef({ x: -100, y: -100 });
   const lastMovePos = useRef({ x: -100, y: -100 });
+
+  // Facing state ('right' or 'left') to keep plane upright in all directions
+  const facing = useRef<"right" | "left">("right");
 
   // Default angle (-45deg = pointing up-right in sticker stance)
   const currentAngle = useRef(-45);
@@ -45,7 +50,28 @@ export default function Cursor() {
 
       // Only calculate heading angle if movement is noticeable (avoids micro-jitter)
       if (dist > 2) {
-        targetAngle.current = Math.atan2(dy, dx) * (180 / Math.PI);
+        let newFacing = facing.current;
+        if (dx > 1.5) {
+          newFacing = "right";
+        } else if (dx < -1.5) {
+          newFacing = "left";
+        }
+
+        let nextAngle = 0;
+        if (newFacing === "right") {
+          // Standard right-facing coordinate system: 0deg = pure East, -90deg = North, +90deg = South
+          nextAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+        } else {
+          // Left-facing coordinate system: 0deg = pure West, +90deg = North (clockwise tilts nose up), -90deg = South
+          nextAngle = Math.atan2(-dy, -dx) * (180 / Math.PI);
+        }
+
+        if (newFacing !== facing.current) {
+          facing.current = newFacing;
+          currentAngle.current = nextAngle;
+        }
+
+        targetAngle.current = nextAngle;
         lastMovePos.current = { x: targetPos.current.x, y: targetPos.current.y };
         isMoving.current = true;
 
@@ -79,21 +105,43 @@ export default function Cursor() {
       while (diff < -180) diff += 360;
       currentAngle.current += diff * 0.24;
 
-      // 3. Render Paper Airplane Sticker
-      // Transform origin at nose (36px, 16px) ensures the nose is ALWAYS at cursor position (x, y)
-      if (planeRef.current) {
-        const scale = isClicking.current ? 0.86 : 1.0;
-        planeRef.current.style.transform = `translate(${currentPos.current.x - 36}px, ${
-          currentPos.current.y - 16
-        }px) rotate(${currentAngle.current}deg) scale(${scale})`;
+      const scale = isClicking.current ? 0.86 : 1.0;
+      const isRight = facing.current === "right";
+
+      // 3. Toggle active sprite without React re-render for smooth 60fps performance
+      if (rightSvgRef.current && leftSvgRef.current) {
+        rightSvgRef.current.style.display = isRight ? "block" : "none";
+        leftSvgRef.current.style.display = isRight ? "none" : "block";
       }
 
-      // 4. Calculate airplane tail position (24px behind nose along heading)
-      const rad = (currentAngle.current * Math.PI) / 180;
-      const tailX = currentPos.current.x - Math.cos(rad) * 24;
-      const tailY = currentPos.current.y - Math.sin(rad) * 24;
+      // 4. Render Paper Airplane Sticker with nose tip perfectly anchored to mouse cursor
+      if (planeRef.current) {
+        if (isRight) {
+          planeRef.current.style.transformOrigin = "36px 16px";
+          planeRef.current.style.transform = `translate(${currentPos.current.x - 36}px, ${
+            currentPos.current.y - 16
+          }px) rotate(${currentAngle.current}deg) scale(${scale})`;
+        } else {
+          planeRef.current.style.transformOrigin = "4px 16px";
+          planeRef.current.style.transform = `translate(${currentPos.current.x - 4}px, ${
+            currentPos.current.y - 16
+          }px) rotate(${currentAngle.current}deg) scale(${scale})`;
+        }
+      }
 
-      // 5. Shift trailing wind-slip dots
+      // 5. Calculate airplane tail position for wind trail
+      const rad = (currentAngle.current * Math.PI) / 180;
+      let tailX = currentPos.current.x;
+      let tailY = currentPos.current.y;
+      if (isRight) {
+        tailX = currentPos.current.x - Math.cos(rad) * 24;
+        tailY = currentPos.current.y - Math.sin(rad) * 24;
+      } else {
+        tailX = currentPos.current.x + Math.cos(rad) * 24;
+        tailY = currentPos.current.y + Math.sin(rad) * 24;
+      }
+
+      // 6. Shift trailing wind-slip dots
       trail.current[0].x += (tailX - trail.current[0].x) * 0.45;
       trail.current[0].y += (tailY - trail.current[0].y) * 0.45;
       for (let i = TRAIL_COUNT - 1; i > 0; i--) {
@@ -158,13 +206,15 @@ export default function Cursor() {
             "drop-shadow(0 3px 6px rgba(0,0,0,0.20)) drop-shadow(0 1px 2px rgba(0,0,0,0.14))",
         }}
       >
+        {/* 1. RIGHT-FACING SPRITE (Used when moving East / Right) */}
         <svg
+          ref={rightSvgRef}
           width="40"
           height="32"
           viewBox="0 0 40 32"
           className="block overflow-visible"
         >
-          {/* 1. White die-cut sticker backing (Timbul Sticker Effect) */}
+          {/* White die-cut sticker backing (Timbul Sticker Effect) */}
           <path
             d="M 36 16 L 4 4 L 12 16 L 6 22 L 14 18 L 8 28 Z"
             fill="#FFFFFF"
@@ -173,7 +223,7 @@ export default function Cursor() {
             strokeLinejoin="round"
             strokeLinecap="round"
           />
-          {/* 2. Keel under-fold (Shaded fold facet) */}
+          {/* Keel under-fold (Shaded fold facet) */}
           <polygon
             points="12,16 6,22 14,18"
             fill="#DDD6C9"
@@ -181,7 +231,7 @@ export default function Cursor() {
             strokeWidth="2"
             strokeLinejoin="round"
           />
-          {/* 3. Top Wing (Light cream-gray shaded facet) */}
+          {/* Top Wing (Light cream-gray shaded facet) */}
           <polygon
             points="36,16 4,4 12,16"
             fill="#F5F3EC"
@@ -189,7 +239,7 @@ export default function Cursor() {
             strokeWidth="2"
             strokeLinejoin="round"
           />
-          {/* 4. Bottom Wing (Bright crisp white facet) */}
+          {/* Bottom Wing (Bright crisp white facet) */}
           <polygon
             points="36,16 12,16 8,28"
             fill="#FFFFFF"
@@ -197,11 +247,64 @@ export default function Cursor() {
             strokeWidth="2"
             strokeLinejoin="round"
           />
-          {/* 5. Center crease spine line */}
+          {/* Center crease spine line */}
           <line
             x1="36"
             y1="16"
             x2="12"
+            y2="16"
+            stroke="#1E1E1E"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+
+        {/* 2. LEFT-FACING SPRITE (Used when moving West / Left - Keeps wings on top & keel on bottom!) */}
+        <svg
+          ref={leftSvgRef}
+          width="40"
+          height="32"
+          viewBox="0 0 40 32"
+          className="hidden overflow-visible"
+        >
+          {/* White die-cut sticker backing (Timbul Sticker Effect) */}
+          <path
+            d="M 4 16 L 36 4 L 28 16 L 34 22 L 26 18 L 32 28 Z"
+            fill="#FFFFFF"
+            stroke="#FFFFFF"
+            strokeWidth="5"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+          {/* Keel under-fold (Shaded fold facet) */}
+          <polygon
+            points="28,16 34,22 26,18"
+            fill="#DDD6C9"
+            stroke="#1E1E1E"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+          {/* Top Wing (Light cream-gray shaded facet) */}
+          <polygon
+            points="4,16 36,4 28,16"
+            fill="#F5F3EC"
+            stroke="#1E1E1E"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+          {/* Bottom Wing (Bright crisp white facet) */}
+          <polygon
+            points="4,16 28,16 32,28"
+            fill="#FFFFFF"
+            stroke="#1E1E1E"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+          {/* Center crease spine line */}
+          <line
+            x1="4"
+            y1="16"
+            x2="28"
             y2="16"
             stroke="#1E1E1E"
             strokeWidth="2"

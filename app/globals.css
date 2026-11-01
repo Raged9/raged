@@ -36,12 +36,32 @@
 
 :root {
   --bg: #FBFAF9;
+  --bg-rgb: 251 250 249;
   --base: #302f2d;
+  --base-rgb: 48 47 45;
   --surface: #FFFFFF;
   --surface-muted: #f5f5f5;
   --text: #302f2d;
   --text-muted: rgba(48, 47, 45, 0.6);
   --paper: #FAF8F5;
+  --dot-on: #18181b;
+  --dot-off: rgba(0, 0, 0, 0.06);
+  color-scheme: light;
+}
+
+html.dark {
+  --bg: #111113;
+  --bg-rgb: 17 17 19;
+  --base: #F4F2EE;
+  --base-rgb: 244 242 238;
+  --surface: #1A1A1E;
+  --surface-muted: #1E1E24;
+  --text: #F4F2EE;
+  --text-muted: rgba(244, 242, 238, 0.65);
+  --paper: #16161A;
+  --dot-on: #F4F2EE;
+  --dot-off: rgba(255, 255, 255, 0.08);
+  color-scheme: dark;
 }
 
 @layer base {
@@ -51,14 +71,16 @@
   }
 
   html {
+    background-color: var(--bg);
+    color: var(--base);
     overflow-x: hidden;
     overflow-y: auto;
     scroll-behavior: smooth;
   }
 
   body {
-    background-color: #FBFAF9;
-    color: #302f2d;
+    background-color: var(--bg);
+    color: var(--base);
     font-family: "Poppins", sans-serif;
     letter-spacing: -0.5px;
     min-height: 100vh;
@@ -68,8 +90,8 @@
   }
 
   ::selection {
-    background-color: rgba(48, 47, 45, 0.15);
-    color: #302f2d;
+    background-color: rgb(var(--base-rgb) / 0.15);
+    color: var(--base);
   }
 }
 
@@ -104,7 +126,51 @@ body {
 }
 
 .bg-base {
-  background-color: #302f2d;
+  background-color: var(--base);
+}
+
+.bg-bg {
+  background-color: var(--bg);
+}
+
+.text-bg {
+  color: var(--bg);
+}
+
+.bg-surface {
+  background-color: var(--surface);
+}
+
+.bg-surface-muted {
+  background-color: var(--surface-muted);
+}
+
+.text-fg {
+  color: rgb(var(--base-rgb) / 1);
+}
+
+.text-fg\/30 {
+  color: rgb(var(--base-rgb) / 0.3);
+}
+
+.text-fg\/40 {
+  color: rgb(var(--base-rgb) / 0.4);
+}
+
+.text-fg\/50 {
+  color: rgb(var(--base-rgb) / 0.5);
+}
+
+.text-fg\/60 {
+  color: rgb(var(--base-rgb) / 0.6);
+}
+
+.text-fg\/70 {
+  color: rgb(var(--base-rgb) / 0.7);
+}
+
+.hover\:text-fg:hover {
+  color: rgb(var(--base-rgb) / 1);
 }
 
 .border-custom-dashed {
@@ -121,7 +187,7 @@ body {
 .border-long-dashed {
   border: 1px dashed transparent;
   background: 
-    linear-gradient(white, white) padding-box,
+    linear-gradient(var(--bg), var(--bg)) padding-box,
     repeating-linear-gradient(
       to bottom,
       currentColor 0px,
@@ -134,7 +200,7 @@ body {
 .border-long-dashed2 {
   border-top: 2px dashed transparent;
   background: 
-    linear-gradient(white, white) padding-box,
+    linear-gradient(var(--bg), var(--bg)) padding-box,
     repeating-linear-gradient(
       to right,
       currentColor 0px,

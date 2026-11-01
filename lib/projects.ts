@@ -8,9 +8,10 @@ import { Project } from "@/types";
  * once the backend is ready.
  */
 export async function getProjects(): Promise<Project[]> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const rawUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  if (apiUrl) {
+  if (rawUrl) {
+    const apiUrl = rawUrl.replace(/\/+$/, "");
     try {
       const res = await fetch(`${apiUrl}/api/projects`, {
         next: { revalidate: 60 },

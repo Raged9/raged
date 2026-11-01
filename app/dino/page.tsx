@@ -158,8 +158,10 @@ export default function DinoGamePage() {
     window.addEventListener("resize", resizeCanvas);
 
     // Drawing helper for T-Rex
-    const drawDino = (scaleX: number, scaleY: number) => {
-      ctx.fillStyle = "#27272a";
+    const drawDino = (scaleX: number, scaleY: number, isDark: boolean) => {
+      const spriteColor = isDark ? "#F4F2EE" : "#27272a";
+      const bgCutout = isDark ? "#1E1E24" : "#FBFAF9";
+      ctx.fillStyle = spriteColor;
       const dx = dino.x * scaleX;
       const dy = dino.y * scaleY;
       const dw = dino.w * scaleX;
@@ -170,11 +172,11 @@ export default function DinoGamePage() {
       // Snout
       ctx.fillRect(dx + dw * 0.45, dy + dh * 0.35, dw * 0.45, dh * 0.12);
       // Eye (cutout)
-      ctx.fillStyle = "#FBFAF9";
+      ctx.fillStyle = bgCutout;
       ctx.fillRect(dx + dw * 0.6, dy + dh * 0.08, dw * 0.1, dh * 0.1);
 
       // Back & Body
-      ctx.fillStyle = "#27272a";
+      ctx.fillStyle = spriteColor;
       ctx.fillRect(dx + dw * 0.15, dy + dh * 0.35, dw * 0.45, dh * 0.42);
       // Tail
       ctx.fillRect(dx, dy + dh * 0.42, dw * 0.2, dh * 0.25);
@@ -200,8 +202,8 @@ export default function DinoGamePage() {
     };
 
     // Drawing helper for Cactus
-    const drawCactus = (c: Obstacle, scaleX: number, scaleY: number) => {
-      ctx.fillStyle = "#27272a";
+    const drawCactus = (c: Obstacle, scaleX: number, scaleY: number, isDark: boolean) => {
+      ctx.fillStyle = isDark ? "#F4F2EE" : "#27272a";
       const cx = c.x * scaleX;
       const cy = c.y * scaleY;
       const cw = c.w * scaleX;
@@ -222,8 +224,8 @@ export default function DinoGamePage() {
     };
 
     // Drawing helper for Cloud
-    const drawCloud = (cl: Cloud, scaleX: number, scaleY: number) => {
-      ctx.strokeStyle = "#a1a1aa";
+    const drawCloud = (cl: Cloud, scaleX: number, scaleY: number, isDark: boolean) => {
+      ctx.strokeStyle = isDark ? "rgba(244, 242, 238, 0.4)" : "#a1a1aa";
       ctx.lineWidth = 1.5;
       const cx = cl.x * scaleX;
       const cy = cl.y * scaleY;
@@ -246,21 +248,22 @@ export default function DinoGamePage() {
 
       const scaleX = canvas.width / VW;
       const scaleY = canvas.height / VH;
+      const isDark = document.documentElement.classList.contains("dark");
 
       // Clear Canvas
-      ctx.fillStyle = "#FBFAF9";
+      ctx.fillStyle = isDark ? "#1E1E24" : "#FBFAF9";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // 1. Update Clouds
       for (const cl of clouds) {
         cl.x -= cl.speed;
         if (cl.x < -60) cl.x = VW + 40;
-        drawCloud(cl, scaleX, scaleY);
+        drawCloud(cl, scaleX, scaleY, isDark);
       }
 
       // 2. Draw Ground
       groundOffset = (groundOffset + speed) % 24;
-      ctx.strokeStyle = "#52525b";
+      ctx.strokeStyle = isDark ? "rgba(244, 242, 238, 0.5)" : "#52525b";
       ctx.lineWidth = 2 * scaleY;
       ctx.beginPath();
       ctx.moveTo(0, GROUND_Y * scaleY);
@@ -268,7 +271,7 @@ export default function DinoGamePage() {
       ctx.stroke();
 
       // Ground bumps & specks
-      ctx.fillStyle = "#71717a";
+      ctx.fillStyle = isDark ? "rgba(244, 242, 238, 0.35)" : "#71717a";
       for (let x = -groundOffset; x < VW; x += 36) {
         ctx.fillRect(x * scaleX, (GROUND_Y + 4) * scaleY, 6 * scaleX, 2 * scaleY);
         ctx.fillRect((x + 16) * scaleX, (GROUND_Y + 10) * scaleY, 3 * scaleX, 2 * scaleY);
@@ -366,11 +369,11 @@ export default function DinoGamePage() {
 
       // 4. Draw Obstacles
       for (const obs of obstacles) {
-        drawCactus(obs, scaleX, scaleY);
+        drawCactus(obs, scaleX, scaleY, isDark);
       }
 
       // 5. Draw Dino
-      drawDino(scaleX, scaleY);
+      drawDino(scaleX, scaleY, isDark);
 
       animId = requestAnimationFrame(loop);
     };
@@ -392,12 +395,12 @@ export default function DinoGamePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FBFAF9] text-[#18181b] items-center p-6 sm:p-10 select-none">
+    <div className="flex flex-col min-h-screen bg-bg text-fg items-center p-6 sm:p-10 select-none">
       {/* Top Header Bar */}
-      <div className="w-full max-w-4xl flex items-center justify-between mb-8 pb-4 border-b border-black/10">
+      <div className="w-full max-w-4xl flex items-center justify-between mb-8 pb-4 border-b border-base/10">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-medium text-base/70 hover:text-base transition-colors group"
+          className="inline-flex items-center gap-2 text-sm font-medium text-fg/70 hover:text-fg transition-colors group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           <span>Back to Portfolio</span>
@@ -406,7 +409,7 @@ export default function DinoGamePage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className="p-2 rounded-full hover:bg-black/5 text-base/60 transition-colors cursor-pointer"
+            className="p-2 rounded-full hover:bg-base/10 text-fg/60 transition-colors cursor-pointer"
             title={soundEnabled ? "Mute sound" : "Enable sound"}
           >
             {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
@@ -418,20 +421,20 @@ export default function DinoGamePage() {
       <div className="w-full max-w-4xl flex flex-col items-center">
         {/* Title & Instructions */}
         <div className="text-center space-y-2 mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-mono uppercase">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight font-mono uppercase text-fg">
             Chrome Dino Runner
           </h1>
-          <p className="text-xs sm:text-sm text-base/60 font-mono">
-            Press <kbd className="px-2 py-0.5 bg-black/5 rounded border border-black/10 text-xs">SPACE</kbd> or Tap Screen to Jump
+          <p className="text-xs sm:text-sm text-fg/60 font-mono">
+            Press <kbd className="px-2 py-0.5 bg-base/10 rounded border border-base/15 text-xs">SPACE</kbd> or Tap Screen to Jump
           </p>
         </div>
 
         {/* Game Screen Container */}
-        <div className="relative w-full bg-[#fbfaf9] border border-black/10 rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden flex flex-col items-center">
+        <div className="relative w-full bg-surface-muted border border-base/10 rounded-3xl p-6 sm:p-8 shadow-sm overflow-hidden flex flex-col items-center">
           {/* Authentic High Score Header */}
-          <div className="w-full flex items-center justify-end gap-4 text-xs sm:text-sm font-mono tracking-widest text-[#52525b] mb-2">
-            <span className="text-[#a1a1aa]">HI {padScore(highScore)}</span>
-            <span className="font-bold text-[#18181b]">{padScore(score)}</span>
+          <div className="w-full flex items-center justify-end gap-4 text-xs sm:text-sm font-mono tracking-widest text-fg/60 mb-2">
+            <span className="text-fg/40">HI {padScore(highScore)}</span>
+            <span className="font-bold text-fg">{padScore(score)}</span>
           </div>
 
           {/* Interactive Game Canvas */}
@@ -443,8 +446,8 @@ export default function DinoGamePage() {
 
             {/* Start / Idle Overlay */}
             {gameState === "idle" && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-[2px] transition-all">
-                <button className="px-8 py-3.5 rounded-full bg-[#18181b] text-white font-mono text-sm uppercase tracking-wider font-semibold shadow-lg hover:scale-105 active:scale-95 transition-all">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-bg/40 backdrop-blur-[2px] transition-all">
+                <button className="px-8 py-3.5 rounded-full bg-base text-bg font-mono text-sm uppercase tracking-wider font-semibold shadow-lg hover:scale-105 active:scale-95 transition-all">
                   Press Space / Tap to Start
                 </button>
               </div>
@@ -452,8 +455,8 @@ export default function DinoGamePage() {
 
             {/* Game Over Overlay */}
             {gameState === "gameover" && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[2px] space-y-4">
-                <div className="font-mono text-xl sm:text-2xl font-bold tracking-widest text-[#18181b]">
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-bg/60 backdrop-blur-[2px] space-y-4">
+                <div className="font-mono text-xl sm:text-2xl font-bold tracking-widest text-fg">
                   G A M E &nbsp; O V E R
                 </div>
                 <button
@@ -461,7 +464,7 @@ export default function DinoGamePage() {
                     e.stopPropagation();
                     handleCanvasClick();
                   }}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#18181b] text-white font-mono text-xs uppercase tracking-wider font-semibold shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-base text-bg font-mono text-xs uppercase tracking-wider font-semibold shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer"
                 >
                   <RotateCcw className="w-4 h-4" />
                   <span>Try Again</span>
@@ -472,7 +475,7 @@ export default function DinoGamePage() {
         </div>
 
         {/* Fun Footer Hint */}
-        <div className="mt-8 text-center text-xs text-base/40 font-mono">
+        <div className="mt-8 text-center text-xs text-fg/40 font-mono">
           <p>The iconic offline runner reimagined for Edgar&apos;s portfolio.</p>
         </div>
       </div>

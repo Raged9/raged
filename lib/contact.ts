@@ -10,9 +10,10 @@ export interface ContactResponse {
 }
 
 export async function sendContactMessage(data: ContactFormData): Promise<ContactResponse> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const rawUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  if (apiUrl) {
+  if (rawUrl) {
+    const apiUrl = rawUrl.replace(/\/+$/, "");
     try {
       const res = await fetch(`${apiUrl}/api/contact`, {
         method: "POST",

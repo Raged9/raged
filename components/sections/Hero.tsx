@@ -88,11 +88,11 @@ export default function Hero({ projects = [] }: HeroProps) {
           <motion.h1
             variants={fadeUp}
             transition={{ duration: 0.7, ease: easeOut }}
-            className="text-3xl sm:text-[34px] font-bold text-[#302f2d] leading-[1.25] tracking-tight"
+            className="text-3xl sm:text-[34px] font-bold text-base leading-[1.25] tracking-tight"
           >
             <span className="inline-flex items-center align-baseline">
               <span
-                className={`${borel.className} font-normal text-3xl sm:text-[34px] text-[#302f2d] mr-2.5 leading-none inline-block relative top-[9px] sm:top-[10px]`}
+                className={`${borel.className} font-normal text-3xl sm:text-[34px] text-base mr-2.5 leading-none inline-block relative top-[9px] sm:top-[10px]`}
                 style={{ letterSpacing: "normal" }}
               >
                 hello,
@@ -117,7 +117,7 @@ export default function Hero({ projects = [] }: HeroProps) {
           <motion.p
             variants={fadeUp}
             transition={{ duration: 0.7, ease: easeOut }}
-            className="mt-3.5 sm:mt-4 text-[#302f2d]/70 text-sm sm:text-[14px] leading-relaxed max-w-xl font-normal"
+            className="mt-3.5 sm:mt-4 text-base/70 text-sm sm:text-[14px] leading-relaxed max-w-xl font-normal"
           >
             i build things with code - from scalable management systems to tactile web experiences.
           </motion.p>
@@ -130,25 +130,26 @@ export default function Hero({ projects = [] }: HeroProps) {
           >
             <Link
               href="#projects"
-              className="serif py-3 px-6 min-h-11 rounded-[13px] text-[18px] hover:scale-105 active:scale-95 transition-all duration-300 font-bold cursor-pointer text-white bg-[#302f2d] shadow-lg shadow-black/15 w-fit flex items-center justify-center"
+              className="serif py-3 px-6 min-h-11 rounded-[13px] text-[18px] hover:scale-105 active:scale-95 transition-all duration-300 font-bold cursor-pointer text-bg bg-base shadow-lg shadow-black/15 w-fit flex items-center justify-center"
             >
               welcome to my world
             </Link>
             <Link
               href="#boarding-pass"
-              className="py-3 px-4 min-h-11 rounded-[13px] text-[14px] font-medium text-base/60 bg-[#f5f5f5] hover:bg-[#eae8e4] hover:text-base transition-all duration-200 flex items-center"
+              className="py-3 px-4 min-h-11 rounded-[13px] text-[14px] font-medium text-fg/60 bg-surface-muted hover:bg-base/10 hover:text-fg transition-all duration-200 flex items-center"
             >
               boarding pass →
             </Link>
           </motion.div>
         </motion.div>
 
-        {/* Right Column: Interactive Pixel Dot Grid (Hidden on mobile, visible on desktop) */}
+        {/* Right Column: Interactive Pixel Dot Grid (Hidden on mobile, visible on desktop, right edge aligned with GitHub icon) */}
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.25, ease: easeOut }}
-          className="hidden lg:flex shrink-0 lg:w-auto justify-end -translate-x-[3px]"
+          className="hidden lg:flex shrink-0 lg:w-auto justify-end"
+          style={{ marginRight: "23px" }}
         >
           <PixelDotGrid />
         </motion.div>
@@ -190,10 +191,10 @@ export default function Hero({ projects = [] }: HeroProps) {
                     : "w-60 sm:w-80 md:w-96"
                   }`}
               >
-                {/* Visual UI Mockup Placeholder */}
+            {/* Visual UI Mockup Placeholder — keep dark text inside white mockup card */}
                 {i % 3 === 0 ? (
                   /* Seekr Auth Mockup */
-                  <div className="w-full h-full grid grid-cols-12 bg-white text-base overflow-hidden">
+                  <div className="w-full h-full grid grid-cols-12 bg-white text-[#302f2d] overflow-hidden">
                     <div className="col-span-7 p-3 sm:p-5 flex flex-col justify-between border-r border-black/5 bg-[#FAFAFA]">
                       <div>
                         <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 mb-2">

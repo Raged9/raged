@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Shield,
   Plus,
   Edit2,
   Trash2,
@@ -16,9 +15,75 @@ import {
   Save,
   CheckCircle,
   AlertCircle,
-  Camera
+  Camera,
+  Upload,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { api, ProjectItem, OffScreenPhotoItem, removeToken } from '@/lib/api-client';
+
+/**
+ * Processes an uploaded image file:
+ * 1. If NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME & NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET are set, uploads to Cloudinary.
+ * 2. Otherwise (default, zero API key needed), resizes & compresses via HTML5 Canvas into a compact
+ *    WebP/JPEG Data URL so it can be stored directly inside the backend database!
+ */
+async function processImageFile(file: File, maxDimension = 1200, quality = 0.84): Promise<string> {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+  if (cloudName && uploadPreset) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', uploadPreset);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.secure_url) return data.secure_url;
+    }
+  }
+
+  // Fallback / Default: Compress & encode directly for database storage
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Gagal membaca file gambar'));
+    reader.onload = () => {
+      const img = new window.Image();
+      img.onerror = () => reject(new Error('Format gambar tidak valid'));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDimension || height > maxDimension) {
+          if (width >= height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(reader.result as string);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        // Try WebP first for compact size, fallback to JPEG
+        let dataUrl = canvas.toDataURL('image/webp', quality);
+        if (!dataUrl.startsWith('data:image/webp')) {
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+        resolve(dataUrl);
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -26,6 +91,8 @@ export default function AdminDashboardPage() {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [photos, setPhotos] = useState<OffScreenPhotoItem[]>([]);
   const [isSavingPhotos, setIsSavingPhotos] = useState(false);
+  const [uploadingPhotoId, setUploadingPhotoId] = useState<string | null>(null);
+  const [isUploadingProjectImage, setIsUploadingProjectImage] = useState(false);
   const [adminUser, setAdminUser] = useState<{ id: string; email: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -79,12 +146,43 @@ export default function AdminDashboardPage() {
     );
   };
 
+  const handlePhotoFileUpload = async (id: string, file: File | undefined) => {
+    if (!file) return;
+    setUploadingPhotoId(id);
+    try {
+      const dataUrl = await processImageFile(file, 700, 0.85);
+      handlePhotoChange(id, 'imageUrl', dataUrl);
+      setStatusMessage({
+        type: 'success',
+        text: `Gambar "${file.name}" berhasil dimuat! Jangan lupa klik "Save All Photos" untuk menyimpan ke database.`,
+      });
+      setTimeout(() => setStatusMessage(null), 4000);
+    } catch (err: any) {
+      setStatusMessage({ type: 'error', text: err.message || 'Gagal memproses file gambar' });
+    } finally {
+      setUploadingPhotoId(null);
+    }
+  };
+
+  const handleProjectFileUpload = async (file: File | undefined) => {
+    if (!file) return;
+    setIsUploadingProjectImage(true);
+    try {
+      const dataUrl = await processImageFile(file, 1200, 0.85);
+      setFormData((prev) => ({ ...prev, imageUrl: dataUrl }));
+    } catch (err: any) {
+      setStatusMessage({ type: 'error', text: err.message || 'Gagal memproses file gambar' });
+    } finally {
+      setIsUploadingProjectImage(false);
+    }
+  };
+
   const handleSaveAllPhotos = async () => {
     setIsSavingPhotos(true);
     try {
       const updated = await api.updateAllPhotos(photos);
       setPhotos(updated);
-      setStatusMessage({ type: 'success', text: 'All 8 Off-Screen Polaroid photos saved successfully!' });
+      setStatusMessage({ type: 'success', text: 'All 8 Off-Screen Polaroid photos saved to database!' });
       setTimeout(() => setStatusMessage(null), 3000);
     } catch (err: any) {
       setStatusMessage({ type: 'error', text: err.message || 'Failed to update photos' });
@@ -105,7 +203,7 @@ export default function AdminDashboardPage() {
       slug: '',
       description: '',
       techStack: 'TypeScript, Next.js, TailwindCSS',
-      imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
+      imageUrl: '',
       projectUrl: 'https://github.com',
       githubUrl: 'https://github.com',
       order: projects.length + 1,
@@ -243,9 +341,9 @@ export default function AdminDashboardPage() {
             }`}
           >
             {statusMessage.type === 'success' ? (
-              <CheckCircle className="w-5 h-5 text-emerald-400" />
+              <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-red-400" />
+              <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
             )}
             <span>{statusMessage.text}</span>
           </div>
@@ -286,7 +384,7 @@ export default function AdminDashboardPage() {
                   Portfolio Projects Manager
                 </h1>
                 <p className="text-neutral-400 text-sm mt-1">
-                  Create, update, reorder, or remove showcase & carousel items in real-time.
+                  Create, update, reorder, or upload cover images directly to the database.
                 </p>
               </div>
 
@@ -298,219 +396,272 @@ export default function AdminDashboardPage() {
               </button>
             </div>
 
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((proj) => (
-            <div
-              key={proj.id}
-              className="bg-[#181818] border border-neutral-800 rounded-xl overflow-hidden shadow-lg flex flex-col justify-between group hover:border-neutral-700 transition-colors"
-            >
-              {/* Card Image Thumbnail */}
-              <div>
-                <div className="relative h-44 w-full bg-neutral-900 overflow-hidden">
-                  {proj.imageUrl ? (
-                    <img
-                      src={proj.imageUrl}
-                      alt={proj.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-neutral-600 font-bold">
-                      No Image Provided
-                    </div>
-                  )}
-                  <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[11px] font-mono font-bold text-white border border-white/10">
-                    Order #{proj.order}
-                  </span>
-                </div>
-
-                <div className="p-5 space-y-3">
+            {/* Projects Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.map((proj) => (
+                <div
+                  key={proj.id}
+                  className="bg-[#181818] border border-neutral-800 rounded-xl overflow-hidden shadow-lg flex flex-col justify-between group hover:border-neutral-700 transition-colors"
+                >
+                  {/* Card Image Thumbnail */}
                   <div>
-                    <span className="text-[11px] font-mono text-neutral-400 block mb-0.5">
-                      /{proj.slug}
-                    </span>
-                    <h3 className="text-lg font-bold text-white truncate">{proj.title}</h3>
-                  </div>
-
-                  <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">
-                    {proj.description}
-                  </p>
-
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {proj.techStack?.map((t) => (
-                      <span
-                        key={t}
-                        className="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-700/80 text-[10px] font-semibold text-neutral-300"
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Actions Footer */}
-              <div className="p-4 bg-[#141414]/60 border-t border-neutral-800/80 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {proj.projectUrl && (
-                    <a
-                      href={proj.projectUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-1.5 rounded hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
-                      title="Open Live URL"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleOpenEditModal(proj)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-white transition-colors"
-                  >
-                    <Edit2 className="w-3.5 h-3.5 text-amber-400" />
-                    Edit
-                  </button>
-
-                  <button
-                    onClick={() => handleDeleteProject(proj.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-red-950/50 hover:bg-red-900 text-xs font-semibold text-red-300 border border-red-800/40 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </>
-      ) : (
-        /* Off-Screen Photo Cards CMS Tab */
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-white uppercase flex items-center gap-2.5">
-                <Camera className="w-7 h-7 text-[#A3B899]" />
-                Off-Screen Photos Manager
-              </h1>
-              <p className="text-neutral-400 text-sm mt-1">
-                Manage the 8 Polaroid photo cards displayed in the &quot;off screen.&quot; section. Paste image URLs to display real photos or leave empty to use default placeholders.
-              </p>
-            </div>
-
-            <button
-              onClick={handleSaveAllPhotos}
-              disabled={isSavingPhotos}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#3E4F36] hover:bg-[#2E3B27] text-white font-bold text-sm transition-all shadow-lg self-start sm:self-auto border border-[#A3B899]/30 disabled:opacity-50"
-            >
-              <Save className="w-4 h-4" />
-              {isSavingPhotos ? "Saving Changes..." : "Save All Photos"}
-            </button>
-          </div>
-
-          {/* Photos 4-column responsive grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-            {photos.map((photo, idx) => (
-              <div
-                key={photo.id || idx}
-                className="bg-[#181818] border border-neutral-800 rounded-xl p-4 flex flex-col justify-between shadow-lg group hover:border-neutral-700 transition-colors"
-              >
-                {/* Mini Polaroid Preview */}
-                <div className="flex justify-center py-2">
-                  <div
-                    className="bg-white p-2 pb-5 rounded-xs shadow-md border border-black/10 w-28 transition-transform duration-200"
-                    style={{ transform: `rotate(${photo.rotation || 0}deg)` }}
-                  >
-                    <div className="w-full aspect-[4/5] bg-neutral-200 rounded-xs overflow-hidden flex items-center justify-center relative">
-                      {photo.imageUrl ? (
+                    <div className="relative h-44 w-full bg-neutral-900 overflow-hidden">
+                      {proj.imageUrl ? (
                         <img
-                          src={photo.imageUrl}
-                          alt={photo.caption}
+                          src={proj.imageUrl}
+                          alt={proj.title}
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="flex flex-col items-center justify-center text-neutral-400 p-1 text-center">
-                          <Camera className="w-5 h-5 mb-1 opacity-50" />
-                          <span className="text-[9px] font-mono leading-none">Placeholder #{photo.order}</span>
+                        <div className="w-full h-full flex items-center justify-center text-neutral-600 font-bold">
+                          No Image Provided
                         </div>
                       )}
+                      <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[11px] font-mono font-bold text-white border border-white/10">
+                        Order #{proj.order}
+                      </span>
                     </div>
-                    <p className="serif text-[9px] text-neutral-600 text-center mt-1 truncate">
-                      {photo.caption || "photo caption"}
-                    </p>
-                  </div>
-                </div>
 
-                {/* Edit inputs */}
-                <div className="space-y-3 mt-3 pt-3 border-t border-neutral-800">
-                  <div>
-                    <label className="text-[11px] font-mono text-neutral-400 block mb-1">
-                      Caption / Title
-                    </label>
-                    <input
-                      type="text"
-                      value={photo.caption}
-                      onChange={(e) => handlePhotoChange(photo.id, "caption", e.target.value)}
-                      placeholder="e.g. morning coffee"
-                      className="w-full px-2.5 py-1.5 rounded bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899]"
-                    />
-                  </div>
+                    <div className="p-5 space-y-3">
+                      <div>
+                        <span className="text-[11px] font-mono text-neutral-400 block mb-0.5">
+                          /{proj.slug}
+                        </span>
+                        <h3 className="text-lg font-bold text-white truncate">{proj.title}</h3>
+                      </div>
 
-                  <div>
-                    <label className="text-[11px] font-mono text-neutral-400 block mb-1">
-                      Image URL (or /image.jpg)
-                    </label>
-                    <input
-                      type="text"
-                      value={photo.imageUrl || ""}
-                      onChange={(e) => handlePhotoChange(photo.id, "imageUrl", e.target.value)}
-                      placeholder="Paste image link or leave empty..."
-                      className="w-full px-2.5 py-1.5 rounded bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899]"
-                    />
+                      <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">
+                        {proj.description}
+                      </p>
+
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {proj.techStack?.map((t) => (
+                          <span
+                            key={t}
+                            className="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-700/80 text-[10px] font-semibold text-neutral-300"
+                          >
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[11px] font-mono text-neutral-400 block mb-1">
-                        Rotation (&deg;)
-                      </label>
-                      <select
-                        value={photo.rotation || 0}
-                        onChange={(e) => handlePhotoChange(photo.id, "rotation", Number(e.target.value))}
-                        className="w-full px-2 py-1.5 rounded bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899]"
+                  {/* Card Actions Footer */}
+                  <div className="p-4 bg-[#141414]/60 border-t border-neutral-800/80 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {proj.projectUrl && (
+                        <a
+                          href={proj.projectUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 rounded hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
+                          title="Open Live URL"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenEditModal(proj)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-white transition-colors"
                       >
-                        <option value="-6">-6&deg; (Left)</option>
-                        <option value="-4">-4&deg;</option>
-                        <option value="-3">-3&deg;</option>
-                        <option value="-1">-1&deg;</option>
-                        <option value="0">0&deg; (Flat)</option>
-                        <option value="1">+1&deg;</option>
-                        <option value="3">+3&deg;</option>
-                        <option value="5">+5&deg; (Right)</option>
-                      </select>
-                    </div>
+                        <Edit2 className="w-3.5 h-3.5 text-amber-400" />
+                        Edit
+                      </button>
 
-                    <div>
-                      <label className="text-[11px] font-mono text-neutral-400 block mb-1">
-                        Order
-                      </label>
-                      <input
-                        type="number"
-                        value={photo.order}
-                        onChange={(e) => handlePhotoChange(photo.id, "order", Number(e.target.value))}
-                        className="w-full px-2 py-1.5 rounded bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899]"
-                      />
+                      <button
+                        onClick={() => handleDeleteProject(proj.id)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-red-950/50 hover:bg-red-900 text-xs font-semibold text-red-300 border border-red-800/40 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          /* Off-Screen Photo Cards CMS Tab */
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
+              <div>
+                <h1 className="text-3xl font-black tracking-tight text-white uppercase flex items-center gap-2.5">
+                  <Camera className="w-7 h-7 text-[#A3B899]" />
+                  Off-Screen Photos Manager
+                </h1>
+                <p className="text-neutral-400 text-sm mt-1">
+                  Upload image files directly from your device (stored in the database) or paste an image URL for the 8 Polaroid cards.
+                </p>
               </div>
-            ))}
+
+              <button
+                onClick={handleSaveAllPhotos}
+                disabled={isSavingPhotos}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#3E4F36] hover:bg-[#2E3B27] text-white font-bold text-sm transition-all shadow-lg self-start sm:self-auto border border-[#A3B899]/30 disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                {isSavingPhotos ? 'Saving Changes...' : 'Save All Photos'}
+              </button>
+            </div>
+
+            {/* Photos 4-column responsive grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+              {photos.map((photo, idx) => {
+                const isDataUrl = Boolean(photo.imageUrl && photo.imageUrl.startsWith('data:image/'));
+                const isUploadingThis = uploadingPhotoId === photo.id;
+
+                return (
+                  <div
+                    key={photo.id || idx}
+                    className="bg-[#181818] border border-neutral-800 rounded-xl p-4 flex flex-col justify-between shadow-lg group hover:border-neutral-700 transition-colors"
+                  >
+                    {/* Mini Polaroid Preview (Clickable to Upload File) */}
+                    <div className="flex justify-center py-2">
+                      <label
+                        className="bg-white p-2 pb-5 rounded-xs shadow-md border border-black/10 w-28 transition-transform duration-200 cursor-pointer relative group/polaroid"
+                        style={{ transform: `rotate(${photo.rotation || 0}deg)` }}
+                        title="Click to upload photo file"
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handlePhotoFileUpload(photo.id, e.target.files?.[0])}
+                        />
+                        <div className="w-full aspect-[4/5] bg-neutral-200 rounded-xs overflow-hidden flex items-center justify-center relative">
+                          {photo.imageUrl ? (
+                            <img
+                              src={photo.imageUrl}
+                              alt={photo.caption}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center text-neutral-400 p-1 text-center">
+                              <Camera className="w-5 h-5 mb-1 opacity-50" />
+                              <span className="text-[9px] font-mono leading-none">
+                                Placeholder #{photo.order}
+                              </span>
+                            </div>
+                          )}
+                          {/* Hover Upload Overlay */}
+                          <div className="absolute inset-0 bg-black/55 opacity-0 group-hover/polaroid:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[9px] font-mono gap-1">
+                            <Upload className="w-4 h-4 text-[#A3B899]" />
+                            <span>{isUploadingThis ? 'Loading...' : 'Upload File'}</span>
+                          </div>
+                        </div>
+                        <p className="serif text-[9px] text-neutral-600 text-center mt-1 truncate">
+                          {photo.caption || 'photo caption'}
+                        </p>
+                      </label>
+                    </div>
+
+                    {/* Edit inputs */}
+                    <div className="space-y-3 mt-3 pt-3 border-t border-neutral-800">
+                      <div>
+                        <label className="text-[11px] font-mono text-neutral-400 block mb-1">
+                          Caption / Title
+                        </label>
+                        <input
+                          type="text"
+                          value={photo.caption}
+                          onChange={(e) => handlePhotoChange(photo.id, 'caption', e.target.value)}
+                          placeholder="e.g. morning coffee"
+                          className="w-full px-2.5 py-1.5 rounded bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899]"
+                        />
+                      </div>
+
+                      {/* Direct File Upload + Optional URL Input */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-[11px] font-mono text-neutral-400">
+                            Photo Source (File / URL)
+                          </label>
+                          {photo.imageUrl && (
+                            <button
+                              type="button"
+                              onClick={() => handlePhotoChange(photo.id, 'imageUrl', '')}
+                              className="text-[10px] font-mono text-red-400 hover:underline"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="flex gap-1.5 mb-1.5">
+                          <label className="flex-1 inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded bg-[#3E4F36]/70 hover:bg-[#3E4F36] border border-[#A3B899]/30 text-white text-xs font-semibold cursor-pointer transition-colors">
+                            <Upload className="w-3.5 h-3.5 text-[#A3B899]" />
+                            <span>{isUploadingThis ? 'Processing...' : 'Pilih File Gambar'}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handlePhotoFileUpload(photo.id, e.target.files?.[0])}
+                            />
+                          </label>
+                        </div>
+
+                        <input
+                          type="text"
+                          value={isDataUrl ? '' : photo.imageUrl || ''}
+                          onChange={(e) => handlePhotoChange(photo.id, 'imageUrl', e.target.value)}
+                          placeholder={
+                            isDataUrl
+                              ? '✓ File gambar tersimpan (atau paste URL baru)'
+                              : 'Atau paste link URL gambar...'
+                          }
+                          className="w-full px-2.5 py-1.5 rounded bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899] placeholder:text-neutral-500"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[11px] font-mono text-neutral-400 block mb-1">
+                            Rotation (&deg;)
+                          </label>
+                          <select
+                            value={photo.rotation || 0}
+                            onChange={(e) =>
+                              handlePhotoChange(photo.id, 'rotation', Number(e.target.value))
+                            }
+                            className="w-full px-2 py-1.5 rounded bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899]"
+                          >
+                            <option value="-6">-6&deg; (Left)</option>
+                            <option value="-4">-4&deg;</option>
+                            <option value="-3">-3&deg;</option>
+                            <option value="-1">-1&deg;</option>
+                            <option value="0">0&deg; (Flat)</option>
+                            <option value="1">+1&deg;</option>
+                            <option value="3">+3&deg;</option>
+                            <option value="5">+5&deg; (Right)</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-mono text-neutral-400 block mb-1">
+                            Order
+                          </label>
+                          <input
+                            type="number"
+                            value={photo.order}
+                            onChange={(e) =>
+                              handlePhotoChange(photo.id, 'order', Number(e.target.value))
+                            }
+                            className="w-full px-2 py-1.5 rounded bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
       </main>
 
       {/* Create / Edit Project Modal */}
@@ -590,17 +741,72 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs uppercase font-bold text-neutral-400 mb-1.5">
-                  Cover Image URL
-                </label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
-                />
+              {/* Cover Image Upload (File or URL) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs uppercase font-bold text-neutral-400">
+                    Cover Image (Upload File atau Link URL)
+                  </label>
+                  {formData.imageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, imageUrl: '' })}
+                      className="text-xs font-mono text-red-400 hover:underline"
+                    >
+                      Hapus Gambar
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                  {/* Live Image Preview */}
+                  <div className="w-full sm:w-32 h-24 rounded-lg bg-neutral-900 border border-neutral-700 overflow-hidden flex items-center justify-center shrink-0">
+                    {formData.imageUrl ? (
+                      <img
+                        src={formData.imageUrl}
+                        alt="Cover preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center text-neutral-500 text-[10px] font-mono">
+                        <ImageIcon className="w-5 h-5 mb-1 opacity-50" />
+                        <span>No Image</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upload File Button + URL Input */}
+                  <div className="flex-1 space-y-2">
+                    <label className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#3E4F36]/80 hover:bg-[#3E4F36] border border-[#A3B899]/40 text-white text-xs font-bold cursor-pointer transition-colors">
+                      <Upload className="w-4 h-4 text-[#A3B899]" />
+                      <span>
+                        {isUploadingProjectImage
+                          ? 'Memproses Gambar...'
+                          : 'Pilih File Gambar dari Komputer (JPG / PNG / WEBP)'}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleProjectFileUpload(e.target.files?.[0])}
+                      />
+                    </label>
+
+                    <input
+                      type="text"
+                      value={
+                        formData.imageUrl.startsWith('data:image/') ? '' : formData.imageUrl
+                      }
+                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                      placeholder={
+                        formData.imageUrl.startsWith('data:image/')
+                          ? '✓ File gambar siap disimpan ke database (atau paste URL di sini)'
+                          : 'Atau paste link URL gambar (https://...)'
+                      }
+                      className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899] placeholder:text-neutral-500"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -609,7 +815,7 @@ export default function AdminDashboardPage() {
                     Live Demo URL
                   </label>
                   <input
-                    type="url"
+                    type="text"
                     value={formData.projectUrl}
                     onChange={(e) => setFormData({ ...formData, projectUrl: e.target.value })}
                     placeholder="https://example.com"
@@ -622,7 +828,7 @@ export default function AdminDashboardPage() {
                     GitHub Repo URL
                   </label>
                   <input
-                    type="url"
+                    type="text"
                     value={formData.githubUrl}
                     onChange={(e) => setFormData({ ...formData, githubUrl: e.target.value })}
                     placeholder="https://github.com/..."
@@ -653,7 +859,7 @@ export default function AdminDashboardPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isUploadingProjectImage}
                   className="flex items-center gap-2 px-6 py-2 rounded-lg bg-[#3E4F36] hover:bg-[#2E3B27] text-white text-xs font-bold transition-colors shadow-lg disabled:opacity-50 border border-[#A3B899]/30"
                 >
                   <Save className="w-4 h-4" />

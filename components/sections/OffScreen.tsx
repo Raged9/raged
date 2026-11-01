@@ -134,8 +134,8 @@ export default function OffScreen({ initialPhotos = [] }: OffScreenProps) {
                 {/* Tooltip reveal matching Tayo source code */}
                 <span
                   className={`
-                    absolute left-1/2 bg-white shadow-md shadow-black/10 rounded-full px-3 py-1 text-base/80 font-bold -translate-x-1/2 -top-10
-                    text-xs whitespace-nowrap hidden md:block border border-black/5
+                    absolute left-1/2 bg-surface shadow-md shadow-black/20 rounded-full px-3 py-1 text-base/90 font-bold -translate-x-1/2 -top-10
+                    text-xs whitespace-nowrap hidden md:block border border-base/10
                     transition-all duration-300 ease-out
                     ${
                       isHovered

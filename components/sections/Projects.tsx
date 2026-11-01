@@ -42,7 +42,7 @@ export default function Projects({ projects }: ProjectsProps) {
       <div className="py-6 gap-6 w-full flex flex-col">
         {/* Category Filter Pills (Tayo-style) */}
         <motion.div
-          className="bg-[#f5f5f5] w-fit max-w-full my-2 p-1.5 rounded-full flex flex-wrap gap-2 border-4 shadow-inner border-white"
+          className="bg-surface-muted w-fit max-w-full my-2 p-1.5 rounded-full flex flex-wrap gap-2 border-4 shadow-inner border-surface"
           initial={reduceMotion ? false : { opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={viewportOnce}
@@ -54,8 +54,8 @@ export default function Projects({ projects }: ProjectsProps) {
               onClick={() => setActiveCategory(cat)}
               className={`py-2 px-5 text-xs md:text-sm rounded-full font-semibold transition-all duration-300 ${
                 activeCategory === cat
-                  ? "bg-[#302f2d] text-white shadow-sm"
-                  : "text-[#302f2d]/50 hover:text-[#302f2d]"
+                  ? "bg-base text-bg shadow-sm"
+                  : "text-fg/50 hover:text-fg"
               }`}
             >
               {cat}
@@ -82,7 +82,7 @@ export default function Projects({ projects }: ProjectsProps) {
               >
                 <div>
                   {/* Visual Preview Card matching Tayo */}
-                  <div className="w-full p-2.5 shadow-inner rounded-3xl transition-all duration-300 bg-[#f5f5f5] overflow-hidden group-hover:bg-[#EFEFEF]">
+                  <div className="w-full p-2.5 shadow-inner rounded-3xl transition-all duration-300 bg-surface-muted overflow-hidden group-hover:bg-base/10">
                     <div className="relative w-full aspect-video bg-gradient-to-br from-base/5 to-base/10 rounded-2xl flex flex-col items-center justify-center p-4 text-center">
                       <span className="text-4xl sm:text-5xl font-bold text-base/20 select-none">
                         {project.title.charAt(0)}
@@ -147,7 +147,7 @@ export default function Projects({ projects }: ProjectsProps) {
                       href={project.liveUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-base/50 hover:text-base transition-colors"
+                      className="text-fg/50 hover:text-fg transition-colors"
                       title="Live Demo"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -158,7 +158,7 @@ export default function Projects({ projects }: ProjectsProps) {
                       href={project.githubUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-base/50 hover:text-base transition-colors"
+                      className="text-fg/50 hover:text-fg transition-colors"
                       title="Source Code"
                     >
                       <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
@@ -186,7 +186,7 @@ export default function Projects({ projects }: ProjectsProps) {
             onClick={() => setSelectedCaseStudy(null)}
           >
             <motion.div
-              className="bg-white text-base rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 sm:p-8 shadow-2xl relative border border-black/5"
+              className="bg-surface text-base rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 sm:p-8 shadow-2xl relative border border-base/10"
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
@@ -220,7 +220,7 @@ export default function Projects({ projects }: ProjectsProps) {
                   <h4 className="text-xs font-mono uppercase tracking-widest text-base font-bold mb-2">
                     01. The Challenge
                   </h4>
-                  <p className="bg-[#f5f5f5] p-4 rounded-2xl border border-black/5">
+                  <p className="bg-surface-muted p-4 rounded-2xl border border-base/10">
                     {selectedCaseStudy.caseStudy.challenge}
                   </p>
                 </div>
@@ -229,7 +229,7 @@ export default function Projects({ projects }: ProjectsProps) {
                   <h4 className="text-xs font-mono uppercase tracking-widest text-base font-bold mb-2">
                     02. The Solution
                   </h4>
-                  <p className="bg-[#f5f5f5] p-4 rounded-2xl border border-black/5">
+                  <p className="bg-surface-muted p-4 rounded-2xl border border-base/10">
                     {selectedCaseStudy.caseStudy.solution}
                   </p>
                 </div>
@@ -254,7 +254,7 @@ export default function Projects({ projects }: ProjectsProps) {
                   <h4 className="text-xs font-mono uppercase tracking-widest text-base font-bold mb-2">
                     04. Key Lessons Learned
                   </h4>
-                  <p className="bg-[#f5f5f5] p-4 rounded-2xl border border-black/5">
+                  <p className="bg-surface-muted p-4 rounded-2xl border border-base/10">
                     {selectedCaseStudy.caseStudy.lessons}
                   </p>
                 </div>
@@ -273,7 +273,7 @@ export default function Projects({ projects }: ProjectsProps) {
                     href={selectedCaseStudy.liveUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-semibold bg-base text-white hover:bg-base/85 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-semibold bg-base text-bg hover:bg-base/85 transition-colors"
                   >
                     <span>Visit Live Site</span>
                     <ArrowUpRight className="w-3.5 h-3.5" />

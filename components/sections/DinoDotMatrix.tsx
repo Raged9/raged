@@ -354,6 +354,9 @@ export default function DinoDotMatrix() {
       const mouse = mousePosRef.current;
       const mc = mouse.active ? Math.round((mouse.x / rect.width) * currentCols) : -100;
       const mr = mouse.active ? Math.round((mouse.y / rect.height) * ROWS) : -100;
+      const isDarkMode = document.documentElement.classList.contains("dark");
+      const dotOnColor = isDarkMode ? "#ECE8E1" : "#18181b";
+      const dotOffColor = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)";
 
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < currentCols; c++) {
@@ -374,11 +377,11 @@ export default function DinoDotMatrix() {
           ctx.arc(cx, cy, isCursorPlus ? dotRadius * 1.35 : dotRadius, 0, Math.PI * 2);
 
           if (isCursorPlus) {
-            ctx.fillStyle = "#18181b"; // Active 5-pixel cross dot
+            ctx.fillStyle = dotOnColor; // Active 5-pixel cross dot
           } else if (isDark) {
-            ctx.fillStyle = "#18181b";
+            ctx.fillStyle = dotOnColor;
           } else {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillStyle = dotOffColor;
           }
           ctx.fill();
         }
@@ -411,7 +414,7 @@ export default function DinoDotMatrix() {
   }, []);
 
   return (
-    <section className="relative z-30 w-full left-0 right-0 m-0 p-0 overflow-hidden select-none bg-[#FBFAF9]">
+    <section className="relative z-30 w-full left-0 right-0 m-0 p-0 overflow-hidden select-none bg-bg transition-colors duration-300">
       {/* Top Header sitting directly on paper (No numbers / highscore) */}
       <div className="w-full max-w-304 mx-auto px-6 sm:px-9 pb-3 flex items-center justify-between text-xs font-mono">
         <div className="flex items-center gap-2">
@@ -443,7 +446,7 @@ export default function DinoDotMatrix() {
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <Link
             href="/dino"
-            className="pointer-events-auto group inline-flex items-center gap-2 px-5 py-2 sm:px-6 sm:py-2 rounded-full bg-transparent hover:bg-black/5 text-black border border-black hover:scale-105 active:scale-95 transition-all duration-200 backdrop-blur-[2px]"
+            className="pointer-events-auto group inline-flex items-center gap-2 px-5 py-2 sm:px-6 sm:py-2 rounded-full bg-transparent hover:bg-base/10 text-base border border-base hover:scale-105 active:scale-95 transition-all duration-200 backdrop-blur-[2px]"
           >
             <Play className="w-3.5 h-3.5 fill-current group-hover:scale-110 transition-transform duration-200" />
             <span className="font-mono text-xs sm:text-sm font-semibold tracking-wider uppercase">

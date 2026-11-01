@@ -16,10 +16,10 @@ export default async function Home() {
   ]);
 
   return (
-    <div className="flex scroll-smooth relative flex-col min-h-screen items-center bg-[#FBFAF9] text-[#302f2d] overflow-x-hidden">
+    <div className="flex scroll-smooth relative flex-col min-h-screen items-center bg-bg text-base overflow-x-hidden">
       {/* Tayo's distinctive dashed vertical margin lines (background layer) */}
-      <div className="hidden lg:block h-full min-h-screen z-0 absolute left-8 xl:left-24 border text-black/10 border-long-dashed pointer-events-none" />
-      <div className="hidden lg:block h-full min-h-screen z-0 absolute right-8 xl:right-24 border text-black/10 border-long-dashed pointer-events-none" />
+      <div className="hidden lg:block h-full min-h-screen z-0 absolute left-8 xl:left-24 border text-base/10 border-long-dashed pointer-events-none" />
+      <div className="hidden lg:block h-full min-h-screen z-0 absolute right-8 xl:right-24 border text-base/10 border-long-dashed pointer-events-none" />
 
       <Navbar />
       <Hero projects={projects} />

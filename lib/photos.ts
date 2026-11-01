@@ -16,11 +16,11 @@ export const DEFAULT_OFF_SCREEN_PHOTOS: OffScreenPhoto[] = [
  * Connects to the backend REST API if available, or returns default placeholders.
  */
 export async function getOffScreenPhotos(): Promise<OffScreenPhoto[]> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const rawUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const apiUrl = rawUrl.replace(/\/+$/, "");
 
   try {
     const res = await fetch(`${apiUrl}/api/photos`, {
-      next: { revalidate: 60 },
       cache: "no-store",
     });
     if (res.ok) {

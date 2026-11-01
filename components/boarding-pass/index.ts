@@ -3,3 +3,4 @@ export type { BoardingPassProps } from "./BoardingPass";
 export type { BoardingPassData } from "./types";
 export * from "./Barcode";
 export * from "./tearSound";
+export { default as CloudTransition, triggerCloudTransition } from "./CloudTransition";

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins, Caveat, IBM_Plex_Mono } from "next/font/google";
 import Cursor from "@/components/Cursor";
+import CloudTransition from "@/components/boarding-pass/CloudTransition";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -41,10 +42,19 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${poppins.variable} ${caveat.variable} ${ibmPlexMono.variable} scroll-smooth`}
     >
-      <body className="bg-[#FBFAF9] text-[#302f2d] antialiased min-h-screen selection:bg-base/10 selection:text-base flex flex-col">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("edgar-theme");if(t==="dark"){document.documentElement.classList.add("dark");document.documentElement.setAttribute("data-theme","dark");}else{document.documentElement.classList.remove("dark");document.documentElement.setAttribute("data-theme","light");}}catch(e){}`,
+          }}
+        />
+      </head>
+      <body className="bg-bg text-base antialiased min-h-screen selection:bg-base/10 selection:text-base flex flex-col">
         <Cursor />
+        <CloudTransition />
         {children}
       </body>
     </html>

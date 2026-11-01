@@ -39,7 +39,7 @@ export default function Footer() {
       id="contact"
       className="flex flex-col w-full max-w-304 mx-auto px-6 sm:px-9 pt-16 sm:pt-24 pb-8 sm:pb-12"
     >
-      <div className="bg-[#f5f5f5] border border-black/5 rounded-3xl p-8 sm:p-12 md:p-16">
+      <div className="bg-surface-muted border border-base/10 rounded-3xl p-8 sm:p-12 md:p-16 transition-colors duration-300">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-start">
           {/* Left Column: Direct Info & Editorial Headings */}
           <div className="flex flex-col gap-6">
@@ -65,7 +65,7 @@ export default function Footer() {
                 href="https://github.com/Raged9"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2.5 text-sm text-base/70 hover:text-base transition-colors group font-medium"
+                className="inline-flex items-center gap-2.5 text-sm text-fg/70 hover:text-fg transition-colors group font-medium"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
                   <path
@@ -95,7 +95,7 @@ export default function Footer() {
           {/* Right Column: Contact Form */}
           <div className="w-full">
             {status === "success" ? (
-              <div className="py-12 text-center space-y-3 bg-white rounded-2xl p-8 border border-black/5 shadow-sm">
+              <div className="py-12 text-center space-y-3 bg-surface rounded-2xl p-8 border border-base/10 shadow-sm">
                 <div className="w-12 h-12 rounded-full bg-base/5 flex items-center justify-center mx-auto text-base">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
@@ -156,7 +156,7 @@ export default function Footer() {
                 <button
                   type="submit"
                   disabled={status === "loading"}
-                  className="serif py-3 px-6 rounded-[13px] text-[18px] font-bold cursor-pointer text-white bg-[#302f2d] hover:bg-black shadow-lg shadow-black/15 hover:scale-105 active:scale-95 transition-all duration-300 w-fit flex items-center gap-2 mt-3 disabled:opacity-50"
+                  className="serif py-3 px-6 rounded-[13px] text-[18px] font-bold cursor-pointer text-bg bg-base hover:opacity-90 shadow-lg shadow-black/15 hover:scale-105 active:scale-95 transition-all duration-300 w-fit flex items-center gap-2 mt-3 disabled:opacity-50"
                 >
                   <span>{status === "loading" ? "sending..." : "send message"}</span>
                   <span className="text-xl">→</span>

@@ -405,15 +405,15 @@ export default function TypingGame({
     >
       {/* Top return link if rendered on dedicated page */}
       {showBackLink && (
-        <div className="w-full flex items-center justify-between pb-8 mb-4 border-b border-black/[0.06]">
+        <div className="w-full flex items-center justify-between pb-8 mb-4 border-b border-base/10">
           <Link
             href="/#boarding-pass"
-            className="flex items-center gap-2 text-sm font-medium text-[#302f2d]/70 hover:text-[#302f2d] transition-colors group"
+            className="flex items-center gap-2 text-sm font-medium text-fg/70 hover:text-fg transition-colors group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             <span>Return to Portfolio & Boarding Pass</span>
           </Link>
-          <span className="font-monocraft text-xs text-[#302f2d]/50">
+          <span className="font-monocraft text-xs text-fg/50">
             TERMINAL // TYPE-O-MATIC
           </span>
         </div>
@@ -427,13 +427,13 @@ export default function TypingGame({
         viewport={viewportOnce}
         transition={{ duration: 0.6, ease: easeOut }}
       >
-        <span className="text-xs uppercase tracking-widest text-[#302f2d]/50 font-monocraft font-medium mb-2 block">
+        <span className="text-xs uppercase tracking-widest text-fg/50 font-monocraft font-medium mb-2 block">
           INTERACTIVE FINALE • OLIVE EDITION
         </span>
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#302f2d]">
-          type-o-matic<span className="text-[#302f2d]/30">.</span>
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-fg">
+          type-o-matic<span className="text-fg/30">.</span>
         </h2>
-        <p className="mt-3 text-sm sm:text-base text-[#302f2d]/60 leading-relaxed font-normal">
+        <p className="mt-3 text-sm sm:text-base text-fg/60 leading-relaxed font-normal">
           test your typing velocity on our vintage olive green typewriter terminal. authenticate as operator or enter your pilot call-sign to compete on the leaderboard.
         </p>
       </motion.div>

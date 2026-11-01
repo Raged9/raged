@@ -1,5 +1,6 @@
 // API Client for Porto-Design Frontend connecting to standalone Express backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const rawBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_BASE_URL = rawBase.replace(/\/+$/, "");
 
 const TOKEN_KEY = "porto_admin_token";
 const PLAYER_KEY = "porto_player_profile";
@@ -53,7 +54,8 @@ export interface ApiFetchOptions extends RequestInit {
 }
 
 export async function apiFetch<T = any>(endpoint: string, options: ApiFetchOptions = {}): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const cleanEndpoint = endpoint.replace(/^\/+/, "");
+  const url = `${API_BASE_URL}/${cleanEndpoint}`;
   const token = getToken();
 
   const headers: Record<string, string> = {

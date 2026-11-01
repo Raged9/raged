@@ -149,32 +149,51 @@ export default function PixelDotGrid() {
   const currentHoveredIdxRef = useRef<number | null>(null);
   const lastPosRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Switch to next pattern with smooth transition
+  const morphCleanupRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Switch to next pattern with smooth transition ONLY on changed dots, then clear inline transitions
+  // so theme switching (html.dark) never triggers 1,024 simultaneous CSS transitions!
   const switchPattern = useCallback((nextIdx: number) => {
+    const prevIdx = patternIndexRef.current;
     patternIndexRef.current = nextIdx;
     setPatternIndex(nextIdx);
 
     // Cancel all pending hover fade timers
     timersRef.current.forEach((t) => clearTimeout(t));
     timersRef.current.clear();
+    if (morphCleanupRef.current) clearTimeout(morphCleanupRef.current);
 
+    const prevMatrix = MATRICES[prevIdx];
     const nextMatrix = MATRICES[nextIdx];
     const isReduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const duration = isReduced ? "0ms" : "700ms";
+    const duration = isReduced ? "0ms" : "600ms";
 
-    // Direct DOM batch transition for 60fps morphing without layout thrashing
     const dots = dotElementsRef.current;
     for (let i = 0; i < COLS * ROWS; i++) {
       const el = dots[i];
       if (el) {
-        el.style.transition = `background-color ${duration} ease-in-out, transform ${duration} ease-out, box-shadow ${duration} ease-out`;
+        const isDark = nextMatrix[i] === 1;
+        const changed = prevMatrix[i] !== nextMatrix[i] || el.style.transform !== "scale(1)";
+        el.style.transition = changed
+          ? `background-color ${duration} ease-in-out, transform ${duration} ease-out`
+          : "none";
         el.style.boxShadow = "none";
         el.style.transform = "scale(1)";
-        const isDark = nextMatrix[i] === 1;
-        el.style.backgroundColor = isDark ? "#18181b" : "rgba(0, 0, 0, 0.06)";
+        el.style.backgroundColor = isDark ? "var(--dot-on)" : "var(--dot-off)";
       }
+    }
+
+    if (!isReduced) {
+      morphCleanupRef.current = setTimeout(() => {
+        for (let i = 0; i < COLS * ROWS; i++) {
+          const el = dots[i];
+          if (el && !timersRef.current.has(i)) {
+            el.style.transition = "none";
+          }
+        }
+      }, 620);
     }
   }, []);
 
@@ -209,10 +228,10 @@ export default function PixelDotGrid() {
         // Check current pattern state
         const currentDark = MATRICES[patternIndexRef.current][idx] === 1;
         if (currentDark) {
-          el.style.backgroundColor = "#18181b";
+          el.style.backgroundColor = "var(--dot-on)";
           el.style.transform = "scale(1)";
         } else {
-          el.style.backgroundColor = "rgba(0, 0, 0, 0.06)";
+          el.style.backgroundColor = "var(--dot-off)";
           el.style.transform = "scale(1)";
         }
       }
@@ -388,9 +407,9 @@ export default function PixelDotGrid() {
                 ref={(el) => {
                   dotElementsRef.current[index] = el;
                 }}
-                className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full pointer-events-none transition-all duration-700 ease-out"
+                className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full pointer-events-none"
                 style={{
-                  backgroundColor: isDark ? "#18181b" : "rgba(0, 0, 0, 0.06)",
+                  backgroundColor: isDark ? "var(--dot-on)" : "var(--dot-off)",
                 }}
               />
             </div>

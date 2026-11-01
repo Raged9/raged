@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Github, Instagram, NewTwitterIcon } from '@hugeicons/core-free-icons';
+import RopeToggle from './RopeToggle';
 
 const navLinks = [
   { href: "/#projects", label: "projects" },
@@ -32,7 +33,7 @@ export default function Navbar() {
   return (
     <>
       <motion.nav
-        className="flex z-50 fixed left-0 right-0 justify-between max-w-304 w-full mx-auto px-4 md:px-9 py-4 md:py-9 bg-[#FBFAF9]/5 backdrop-blur-sm"
+        className="flex z-50 fixed top-0 left-0 right-0 justify-between max-w-304 w-full mx-auto px-4 md:px-9 py-4 md:py-9 bg-bg/5 backdrop-blur-sm"
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.21, 0.47, 0.32, 0.98] }}
@@ -52,7 +53,7 @@ export default function Navbar() {
 
           {/* Desktop nav links */}
           <motion.div
-            className="hidden md:flex items-center gap-6"
+            className="hidden md:flex items-center gap-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.3 }}
@@ -61,7 +62,7 @@ export default function Navbar() {
               <Link
                 key={l.href}
                 href={l.href}
-                className="text-base/50 hover:text-base transition-colors duration-200 text-sm tracking-[-0.5px]"
+                className="inline-block origin-center text-fg/50 hover:text-fg hover:scale-110 transition-all duration-200 text-sm tracking-[-0.5px]"
               >
                 {l.label}
               </Link>
@@ -69,61 +70,84 @@ export default function Navbar() {
           </motion.div>
         </div>
 
-        {/* Desktop socials */}
+        {/* Right side in Fixed Navbar: Desktop socials + reserved slot for top-of-page bulb + Mobile Hamburger */}
         <motion.div
-          className="hidden md:flex gap-3 items-center"
+          className="flex items-center gap-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
         >
-          {socials.map((s) => (
-            <motion.a
-              key={s.label}
-              href={s.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              whileHover={{ scale: 1.1, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <HugeiconsIcon
-                icon={s.icon}
-                size={18}
-                strokeWidth={1.7}
-                className="text-base/50 hover:text-base transition-all duration-300"
-              />
-            </motion.a>
-          ))}
-        </motion.div>
+          <div className="hidden md:flex gap-3 items-center">
+            {socials.map((s) => (
+              <motion.a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.1, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center justify-center"
+              >
+                <HugeiconsIcon
+                  icon={s.icon}
+                  size={18}
+                  strokeWidth={1.7}
+                  className="text-fg/50 hover:text-fg transition-colors duration-300"
+                />
+              </motion.a>
+            ))}
+          </div>
 
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden flex flex-col justify-center items-center gap-1.5 min-w-11 min-h-11"
-          onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
-        >
-          <motion.span
-            className="block w-5 h-0.5 bg-base rounded-full origin-center"
-            animate={open ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-            transition={{ duration: 0.2 }}
-          />
-          <motion.span
-            className="block w-5 h-0.5 bg-base rounded-full"
-            animate={open ? { opacity: 0 } : { opacity: 1 }}
-            transition={{ duration: 0.2 }}
-          />
-          <motion.span
-            className="block w-5 h-0.5 bg-base rounded-full origin-center"
-            animate={open ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-            transition={{ duration: 0.2 }}
-          />
-        </button>
+          {/* Reserved spacer so social icons don't overlap the bulb at the top of the page */}
+          <span className="hidden md:block w-px h-3.5 opacity-0 mx-0.5 pointer-events-none" aria-hidden="true" />
+          <div className="w-8 h-8 pointer-events-none" aria-hidden="true" />
+
+          {/* Mobile hamburger */}
+          <button
+            className="md:hidden flex flex-col justify-center items-center gap-1.5 min-w-11 min-h-11"
+            onClick={() => setOpen(!open)}
+            aria-label="Toggle menu"
+          >
+            <motion.span
+              className="block w-5 h-0.5 bg-base rounded-full origin-center"
+              animate={open ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
+              transition={{ duration: 0.2 }}
+            />
+            <motion.span
+              className="block w-5 h-0.5 bg-base rounded-full"
+              animate={open ? { opacity: 0 } : { opacity: 1 }}
+              transition={{ duration: 0.2 }}
+            />
+            <motion.span
+              className="block w-5 h-0.5 bg-base rounded-full origin-center"
+              animate={open ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
+              transition={{ duration: 0.2 }}
+            />
+          </button>
+        </motion.div>
       </motion.nav>
+
+      {/* Top-of-Home-Page Anchored Rope Toggle Bulb (scrolls away naturally when scrolling down) */}
+      <motion.div
+        className="absolute top-0 left-0 right-0 z-[55] max-w-304 w-full mx-auto px-4 md:px-9 py-4 md:py-9 flex justify-end items-center pointer-events-none"
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, ease: [0.21, 0.47, 0.32, 0.98] }}
+      >
+        <div className="flex items-center gap-3">
+          <span className="hidden md:block w-px h-3.5 bg-base/15 mx-0.5" aria-hidden="true" />
+          <div className="pointer-events-auto flex items-center">
+            <RopeToggle />
+          </div>
+          <div className="md:hidden min-w-11 min-h-11" aria-hidden="true" />
+        </div>
+      </motion.div>
 
       {/* Mobile menu */}
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-40 bg-[#FAFAFA] flex flex-col px-6 pt-24 pb-10 md:hidden"
+            className="fixed inset-0 z-40 bg-bg flex flex-col px-6 pt-24 pb-10 md:hidden"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -140,7 +164,7 @@ export default function Navbar() {
                   <Link
                     href={l.href}
                     onClick={() => setOpen(false)}
-                    className="text-3xl font-semibold text-base/70 hover:text-base transition-colors"
+                    className="text-3xl font-semibold text-fg/70 hover:text-fg transition-colors"
                   >
                     {l.label}
                   </Link>
