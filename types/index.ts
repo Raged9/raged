@@ -7,6 +7,7 @@ export interface Project {
   tags: string[];
   techStack?: string[];
   imageUrl?: string;
+  images?: string[];
   liveUrl?: string;
   projectUrl?: string;
   githubUrl?: string;

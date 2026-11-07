@@ -20,9 +20,13 @@ export async function getOffScreenPhotos(): Promise<OffScreenPhoto[]> {
   const apiUrl = rawUrl.replace(/\/+$/, "");
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
     const res = await fetch(`${apiUrl}/api/photos`, {
-      cache: "no-store",
+      next: { revalidate: 60 },
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
@@ -30,7 +34,8 @@ export async function getOffScreenPhotos(): Promise<OffScreenPhoto[]> {
       }
     }
   } catch {
-    // Fallback silently to static data if backend is offline
+    // Fallback immediately to static data if backend is cold-starting or offline;
+    // Client-side useEffect in OffScreen.tsx will seamlessly hydrate once Render wakes up!
   }
 
   return DEFAULT_OFF_SCREEN_PHOTOS;

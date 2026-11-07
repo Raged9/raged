@@ -94,17 +94,31 @@ export default function AdminDashboardPage() {
   const [uploadingPhotoId, setUploadingPhotoId] = useState<string | null>(null);
   const [isUploadingProjectImage, setIsUploadingProjectImage] = useState(false);
   const [adminUser, setAdminUser] = useState<{ id: string; email: string } | null>(null);
+  const [storageMode, setStorageMode] = useState<string>('checking...');
   const [isLoading, setIsLoading] = useState(true);
 
   // Form modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    slug: string;
+    description: string;
+    techStack: string;
+    imageUrl: string;
+    images: string[];
+    newImageUrl: string;
+    projectUrl: string;
+    githubUrl: string;
+    order: number;
+  }>({
     title: '',
     slug: '',
     description: '',
     techStack: '',
     imageUrl: '',
+    images: [],
+    newImageUrl: '',
     projectUrl: '',
     githubUrl: '',
     order: 1,
@@ -127,12 +141,16 @@ export default function AdminDashboardPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [projData, photoData] = await Promise.all([
+      const [projData, photoData, healthData] = await Promise.all([
         api.getProjects().catch(() => []),
         api.getPhotos().catch(() => []),
+        api.checkHealth().catch(() => ({ status: 'ok', service: '', storage: 'unknown' })),
       ]);
       setProjects(projData);
       setPhotos(photoData);
+      if (healthData?.storage) {
+        setStorageMode(healthData.storage);
+      }
     } catch (err) {
       console.warn('Failed to fetch data:', err);
     } finally {
@@ -164,17 +182,69 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleProjectFileUpload = async (file: File | undefined) => {
-    if (!file) return;
+  const handleProjectFilesUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
     setIsUploadingProjectImage(true);
     try {
-      const dataUrl = await processImageFile(file, 1200, 0.85);
-      setFormData((prev) => ({ ...prev, imageUrl: dataUrl }));
+      const uploadedUrls: string[] = [];
+      for (const file of Array.from(files)) {
+        const dataUrl = await processImageFile(file, 1200, 0.85);
+        uploadedUrls.push(dataUrl);
+      }
+      setFormData((prev) => {
+        const nextImages = [...prev.images, ...uploadedUrls];
+        return {
+          ...prev,
+          images: nextImages,
+          imageUrl: nextImages[0] || '',
+        };
+      });
     } catch (err: any) {
       setStatusMessage({ type: 'error', text: err.message || 'Gagal memproses file gambar' });
     } finally {
       setIsUploadingProjectImage(false);
     }
+  };
+
+  const handleAddImageUrl = () => {
+    const trimmed = formData.newImageUrl.trim();
+    if (!trimmed) return;
+    setFormData((prev) => {
+      const nextImages = [...prev.images, trimmed];
+      return {
+        ...prev,
+        images: nextImages,
+        imageUrl: nextImages[0] || '',
+        newImageUrl: '',
+      };
+    });
+  };
+
+  const handleRemoveProjectImage = (index: number) => {
+    setFormData((prev) => {
+      const nextImages = prev.images.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        images: nextImages,
+        imageUrl: nextImages[0] || '',
+      };
+    });
+  };
+
+  const handleMoveProjectImage = (index: number, direction: -1 | 1) => {
+    setFormData((prev) => {
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= prev.images.length) return prev;
+      const nextImages = [...prev.images];
+      const temp = nextImages[index];
+      nextImages[index] = nextImages[targetIndex];
+      nextImages[targetIndex] = temp;
+      return {
+        ...prev,
+        images: nextImages,
+        imageUrl: nextImages[0] || '',
+      };
+    });
   };
 
   const handleSaveAllPhotos = async () => {
@@ -204,6 +274,8 @@ export default function AdminDashboardPage() {
       description: '',
       techStack: 'TypeScript, Next.js, TailwindCSS',
       imageUrl: '',
+      images: [],
+      newImageUrl: '',
       projectUrl: 'https://github.com',
       githubUrl: 'https://github.com',
       order: projects.length + 1,
@@ -213,12 +285,20 @@ export default function AdminDashboardPage() {
 
   const handleOpenEditModal = (project: ProjectItem) => {
     setEditingProject(project);
+    const existingImages =
+      Array.isArray(project.images) && project.images.length > 0
+        ? project.images.filter(Boolean)
+        : project.imageUrl
+        ? [project.imageUrl]
+        : [];
     setFormData({
       title: project.title,
       slug: project.slug,
       description: project.description,
       techStack: project.techStack?.join(', ') || '',
-      imageUrl: project.imageUrl || '',
+      imageUrl: existingImages[0] || project.imageUrl || '',
+      images: existingImages,
+      newImageUrl: '',
       projectUrl: project.projectUrl || '',
       githubUrl: project.githubUrl || '',
       order: project.order || 1,
@@ -251,12 +331,14 @@ export default function AdminDashboardPage() {
       .map((t) => t.trim())
       .filter(Boolean);
 
+    const finalImages = formData.images.filter(Boolean);
     const payload = {
       title: formData.title,
       slug: formData.slug,
       description: formData.description,
       techStack: techArray,
-      imageUrl: formData.imageUrl || null,
+      images: finalImages,
+      imageUrl: finalImages[0] || null,
       projectUrl: formData.projectUrl || null,
       githubUrl: formData.githubUrl || null,
       order: Number(formData.order) || 1,
@@ -308,6 +390,25 @@ export default function AdminDashboardPage() {
             <span className="text-xl font-black text-[#A3B899] tracking-tight">EDGAR</span>
             <span className="text-xs font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#3E4F36] text-[#A3B899] border border-[#2E3B27]">
               CMS LITE
+            </span>
+            <span
+              className={`hidden md:inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full border ${
+                storageMode === 'postgresql'
+                  ? 'bg-emerald-950/80 text-emerald-300 border-emerald-600/40'
+                  : 'bg-amber-950/80 text-amber-300 border-amber-600/40'
+              }`}
+              title={
+                storageMode === 'postgresql'
+                  ? 'Data tersimpan permanen di PostgreSQL'
+                  : 'Set DATABASE_URL di backend agar data tersimpan permanen di PostgreSQL'
+              }
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  storageMode === 'postgresql' ? 'bg-emerald-400' : 'bg-amber-400'
+                }`}
+              />
+              {storageMode === 'postgresql' ? 'PostgreSQL Permanent' : 'Local JSON Fallback'}
             </span>
           </div>
         </div>
@@ -406,9 +507,9 @@ export default function AdminDashboardPage() {
                   {/* Card Image Thumbnail */}
                   <div>
                     <div className="relative h-44 w-full bg-neutral-900 overflow-hidden">
-                      {proj.imageUrl ? (
+                      {(proj.images?.[0] || proj.imageUrl) ? (
                         <img
-                          src={proj.imageUrl}
+                          src={proj.images?.[0] || proj.imageUrl || ''}
                           alt={proj.title}
                           className="w-full h-full object-cover"
                         />
@@ -420,6 +521,11 @@ export default function AdminDashboardPage() {
                       <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[11px] font-mono font-bold text-white border border-white/10">
                         Order #{proj.order}
                       </span>
+                      {(proj.images?.length || 0) > 1 && (
+                        <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded bg-[#3E4F36]/90 backdrop-blur-md text-[11px] font-mono font-bold text-white border border-[#A3B899]/40">
+                          {proj.images?.length} Photos
+                        </span>
+                      )}
                     </div>
 
                     <div className="p-5 space-y-3">
@@ -741,72 +847,140 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
-              {/* Cover Image Upload (File or URL) */}
-              <div className="space-y-2">
+              {/* Multi-Image Gallery Upload (Multiple Files or URLs) */}
+              <div className="space-y-3 p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs uppercase font-bold text-neutral-400">
-                    Cover Image (Upload File atau Link URL)
-                  </label>
-                  {formData.imageUrl && (
+                  <div>
+                    <label className="block text-xs uppercase font-bold text-neutral-300">
+                      Project Images / Gallery ({formData.images.length} Gambar)
+                    </label>
+                    <p className="text-[11px] text-neutral-400 mt-0.5">
+                      Bisa pilih banyak gambar sekaligus! Gambar #1 otomatis menjadi Cover utama.
+                    </p>
+                  </div>
+                  {formData.images.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, imageUrl: '' })}
+                      onClick={() => setFormData({ ...formData, images: [], imageUrl: '' })}
                       className="text-xs font-mono text-red-400 hover:underline"
                     >
-                      Hapus Gambar
+                      Hapus Semua
                     </button>
                   )}
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-                  {/* Live Image Preview */}
-                  <div className="w-full sm:w-32 h-24 rounded-lg bg-neutral-900 border border-neutral-700 overflow-hidden flex items-center justify-center shrink-0">
-                    {formData.imageUrl ? (
-                      <img
-                        src={formData.imageUrl}
-                        alt="Cover preview"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center text-neutral-500 text-[10px] font-mono">
-                        <ImageIcon className="w-5 h-5 mb-1 opacity-50" />
-                        <span>No Image</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Upload File Button + URL Input */}
-                  <div className="flex-1 space-y-2">
-                    <label className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#3E4F36]/80 hover:bg-[#3E4F36] border border-[#A3B899]/40 text-white text-xs font-bold cursor-pointer transition-colors">
-                      <Upload className="w-4 h-4 text-[#A3B899]" />
-                      <span>
-                        {isUploadingProjectImage
-                          ? 'Memproses Gambar...'
-                          : 'Pilih File Gambar dari Komputer (JPG / PNG / WEBP)'}
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => handleProjectFileUpload(e.target.files?.[0])}
-                      />
-                    </label>
-
+                {/* Upload Multiple Files Button + Add URL Input */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <label className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#3E4F36]/80 hover:bg-[#3E4F36] border border-[#A3B899]/40 text-white text-xs font-bold cursor-pointer transition-colors">
+                    <Upload className="w-4 h-4 text-[#A3B899]" />
+                    <span>
+                      {isUploadingProjectImage
+                        ? 'Memproses Gambar...'
+                        : '+ Upload Gambar (Bisa Pilih Lebih dari 1 File)'}
+                    </span>
                     <input
-                      type="text"
-                      value={
-                        formData.imageUrl.startsWith('data:image/') ? '' : formData.imageUrl
-                      }
-                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                      placeholder={
-                        formData.imageUrl.startsWith('data:image/')
-                          ? '✓ File gambar siap disimpan ke database (atau paste URL di sini)'
-                          : 'Atau paste link URL gambar (https://...)'
-                      }
-                      className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899] placeholder:text-neutral-500"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        handleProjectFilesUpload(e.target.files);
+                        e.target.value = '';
+                      }}
                     />
-                  </div>
+                  </label>
                 </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={formData.newImageUrl}
+                    onChange={(e) => setFormData({ ...formData, newImageUrl: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddImageUrl();
+                      }
+                    }}
+                    placeholder="Atau paste link URL gambar (https://...) lalu klik + Tambah URL"
+                    className="flex-1 px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-xs focus:outline-none focus:border-[#A3B899] placeholder:text-neutral-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddImageUrl}
+                    className="px-3.5 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold border border-neutral-700 transition-colors shrink-0"
+                  >
+                    + Tambah URL
+                  </button>
+                </div>
+
+                {/* Gallery Preview Grid */}
+                {formData.images.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
+                    {formData.images.map((imgSrc, idx) => (
+                      <div
+                        key={idx}
+                        className={`relative group rounded-lg overflow-hidden border bg-neutral-950 ${
+                          idx === 0
+                            ? 'border-[#A3B899] ring-1 ring-[#A3B899]/40'
+                            : 'border-neutral-700'
+                        }`}
+                      >
+                        <div className="aspect-video w-full overflow-hidden bg-neutral-900">
+                          <img
+                            src={imgSrc}
+                            alt={`Slide ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Top Badge */}
+                        <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded bg-black/80 backdrop-blur-sm text-[10px] font-mono font-bold text-white border border-white/10">
+                          {idx === 0 ? '★ COVER (#1)' : `#${idx + 1}`}
+                        </div>
+
+                        {/* Delete Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveProjectImage(idx)}
+                          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-red-950/90 hover:bg-red-600 text-white flex items-center justify-center transition-colors border border-red-400/30"
+                          title="Hapus gambar ini"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Reorder Bar */}
+                        {formData.images.length > 1 && (
+                          <div className="flex items-center justify-between px-2 py-1 bg-neutral-900/95 border-t border-neutral-800 text-[10px] font-mono">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => handleMoveProjectImage(idx, -1)}
+                              className="px-1.5 py-0.5 rounded hover:bg-neutral-800 text-neutral-300 disabled:opacity-30"
+                              title="Geser ke kiri"
+                            >
+                              ← Geser
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === formData.images.length - 1}
+                              onClick={() => handleMoveProjectImage(idx, 1)}
+                              className="px-1.5 py-0.5 rounded hover:bg-neutral-800 text-neutral-300 disabled:opacity-30"
+                              title="Geser ke kanan"
+                            >
+                              Geser →
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-6 rounded-lg border border-dashed border-neutral-700 flex flex-col items-center justify-center text-neutral-500 text-xs font-mono gap-1.5">
+                    <ImageIcon className="w-6 h-6 opacity-50" />
+                    <span>Belum ada gambar untuk project ini</span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

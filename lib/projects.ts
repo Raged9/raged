@@ -13,14 +13,19 @@ export async function getProjects(): Promise<Project[]> {
   if (rawUrl) {
     const apiUrl = rawUrl.replace(/\/+$/, "");
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
       const res = await fetch(`${apiUrl}/api/projects`, {
         next: { revalidate: 60 },
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
       if (res.ok) {
         return await res.json();
       }
     } catch {
-      // Fallback silently to static data if backend is offline
+      // Fallback immediately to static data if backend is cold-starting or offline;
+      // Client-side useEffect in Hero.tsx & Projects.tsx will seamlessly hydrate once Render wakes up!
     }
   }
 

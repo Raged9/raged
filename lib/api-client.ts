@@ -91,6 +91,7 @@ export interface ProjectItem {
   description: string;
   techStack: string[];
   imageUrl?: string | null;
+  images?: string[];
   projectUrl?: string | null;
   githubUrl?: string | null;
   order: number;
@@ -118,7 +119,8 @@ export interface OffScreenPhotoItem {
 
 export const api = {
   // Health
-  checkHealth: () => apiFetch<{ status: string; service: string }>("/api/health"),
+  checkHealth: () =>
+    apiFetch<{ status: string; service: string; storage?: string }>("/api/health"),
 
   // Projects
   getProjects: () => apiFetch<ProjectItem[]>("/api/projects"),

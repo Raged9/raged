@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,7 +8,9 @@ import localFont from "next/font/local";
 import { easeOut, fadeUp, staggerChildren } from "@/lib/motion";
 import PixelDotGrid from "./PixelDotGrid";
 import { Project } from "@/types";
-import { Sparkles, ExternalLink, X } from "lucide-react";
+import { Sparkles, Images } from "lucide-react";
+import ProjectLightbox, { getProjectImages } from "@/components/ProjectLightbox";
+import { api } from "@/lib/api-client";
 
 const borel = localFont({
   src: "../../public/Borel-Regular.ttf",
@@ -22,13 +24,25 @@ interface HeroProps {
 }
 
 export default function Hero({ projects = [] }: HeroProps) {
-  const [selected, setSelected] = useState<any | null>(null);
+  const [liveProjects, setLiveProjects] = useState<Project[]>(projects);
+  const [selected, setSelected] = useState<Project | null>(null);
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    api
+      .getProjects()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setLiveProjects(data as unknown as Project[]);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Design carousel items (using projects with images, or aesthetic UI placeholders)
   const carouselItems =
-    projects.length > 0
-      ? projects
+    liveProjects.length > 0
+      ? liveProjects
       : [
         {
           id: "seekr",
@@ -170,20 +184,32 @@ export default function Hero({ projects = [] }: HeroProps) {
       >
         <div className="flex w-max marquee-track">
           {displayItems.map((item, i) => {
-            const hasImage = Boolean(item.imageUrl && item.imageUrl.trim() !== "");
+            const itemImages = getProjectImages(item);
+            const coverImage = itemImages[0];
+            const hasImage = Boolean(coverImage);
 
             return hasImage ? (
-              <img
+              <div
                 key={`${item.id}-${i}`}
-                src={item.imageUrl}
-                alt={item.title}
-                onClick={() => setSelected(item)}
-                className="h-44 sm:h-56 md:h-72 w-auto border-4 sm:border-8 border-white rounded-2xl sm:rounded-3xl shadow-[15px_15px_15px_0px_#00000015,inset_0_0_14px_#000000] mx-2 cursor-pointer hover:scale-[1.02] transition-transform duration-300 object-cover shrink-0"
-              />
+                onClick={() => setSelected(item as Project)}
+                className="relative h-44 sm:h-56 md:h-72 w-auto border-4 sm:border-8 border-white rounded-2xl sm:rounded-3xl shadow-[15px_15px_15px_0px_#00000015,inset_0_0_14px_#000000] mx-2 cursor-pointer hover:scale-[1.02] transition-transform duration-300 overflow-hidden shrink-0 group/card bg-neutral-900"
+              >
+                <img
+                  src={coverImage}
+                  alt={item.title}
+                  className="h-full w-auto object-cover block"
+                />
+                {itemImages.length > 1 && (
+                  <span className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-mono font-semibold flex items-center gap-1.5 border border-white/15 shadow-md">
+                    <Images className="w-3.5 h-3.5" />
+                    {itemImages.length}
+                  </span>
+                )}
+              </div>
             ) : (
               <div
                 key={`${item.id}-${i}`}
-                onClick={() => setSelected(item)}
+                onClick={() => setSelected(item as Project)}
                 className={`h-44 sm:h-56 md:h-72 border-4 sm:border-8 border-white rounded-2xl sm:rounded-3xl shadow-[15px_15px_15px_0px_#00000015] mx-2 cursor-pointer hover:scale-[1.02] transition-transform duration-300 overflow-hidden relative shrink-0 ${i % 3 === 0
                   ? "w-72 sm:w-96 md:w-[480px]"
                   : i % 3 === 1
@@ -287,40 +313,11 @@ export default function Hero({ projects = [] }: HeroProps) {
         </div>
       </motion.div>
 
-      {/* Fullscreen modal matching Tayo source code */}
-      {selected && (
-        <div
-          onClick={() => setSelected(null)}
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6 cursor-zoom-out animate-fadeIn"
-        >
-          <button
-            onClick={() => setSelected(null)}
-            className="absolute top-6 right-6 w-11 h-11 flex items-center justify-center text-white text-xl rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="max-h-[85vh] max-w-4xl w-full bg-white rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col items-center justify-center text-center cursor-default"
-          >
-            {selected.imageUrl ? (
-              <img
-                src={selected.imageUrl}
-                alt={selected.title}
-                className="max-h-[60vh] max-w-full rounded-2xl object-contain shadow-lg"
-              />
-            ) : (
-              <div className="p-8 text-zinc-800">
-                <h3 className="text-2xl font-bold uppercase tracking-tight">{selected.title}</h3>
-                <p className="text-sm text-zinc-500 mt-2 max-w-md mx-auto">{selected.description}</p>
-                <span className="inline-block px-3 py-1 mt-4 rounded-full bg-zinc-100 text-xs font-mono text-zinc-600">
-                  Image can be uploaded via Admin CMS
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Portal-mounted Lightbox Gallery Modal (sits cleanly above Navbar at z-[100]) */}
+      <ProjectLightbox
+        project={selected}
+        onClose={() => setSelected(null)}
+      />
 
       {/* CSS matching Tayo source code: brisk speed (25s) & pause immediately on hover */}
       <style jsx global>{`

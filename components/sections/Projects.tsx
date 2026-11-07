@@ -1,28 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Project } from "@/types";
-import { ArrowUpRight, X, ExternalLink } from "lucide-react";
+import { ArrowUpRight, X, ExternalLink, Images, ZoomIn } from "lucide-react";
 import { easeOut, easeSoft, viewportOnce } from "@/lib/motion";
+import ProjectLightbox, { getProjectImages } from "@/components/ProjectLightbox";
+import { api } from "@/lib/api-client";
 
 interface ProjectsProps {
   projects: Project[];
 }
 
 export default function Projects({ projects }: ProjectsProps) {
+  const [liveProjects, setLiveProjects] = useState<Project[]>(projects);
   const [activeCategory, setActiveCategory] = useState("All");
   const [selectedCaseStudy, setSelectedCaseStudy] = useState<Project | null>(null);
+  const [lightboxState, setLightboxState] = useState<{
+    project: Project;
+    initialIndex: number;
+  } | null>(null);
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    api
+      .getProjects()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setLiveProjects(data as unknown as Project[]);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const categories = ["All", "Web Apps", "Systems & NLP"];
 
   const filteredProjects =
     activeCategory === "All"
-      ? projects
+      ? liveProjects
       : activeCategory === "Web Apps"
-      ? projects.filter((p) => (p.tags || []).some((t) => t.includes("React") || t.includes("Next.js") || t.includes("CMS")))
-      : projects.filter((p) => (p.tags || []).some((t) => t.includes("Python") || t.includes("NLP") || t.includes("FastAPI")));
+      ? liveProjects.filter((p) =>
+          (p.tags || (p as any).techStack || []).some(
+            (t: string) =>
+              t.includes("React") ||
+              t.includes("Next.js") ||
+              t.includes("CMS") ||
+              t.includes("TypeScript") ||
+              t.includes("Tailwind")
+          )
+        )
+      : liveProjects.filter((p) =>
+          (p.tags || (p as any).techStack || []).some(
+            (t: string) =>
+              t.includes("Python") || t.includes("NLP") || t.includes("FastAPI")
+          )
+        );
 
   return (
     <section
@@ -67,6 +99,10 @@ export default function Projects({ projects }: ProjectsProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 w-full mt-4">
           {filteredProjects.map((project, index) => {
             const projectTags = project.tags || (project as any).techStack || [];
+            const projectImages = getProjectImages(project);
+            const coverImage = projectImages[0];
+            const liveHref = project.liveUrl || project.projectUrl;
+
             return (
               <motion.div
                 key={project.id}
@@ -82,14 +118,50 @@ export default function Projects({ projects }: ProjectsProps) {
               >
                 <div>
                   {/* Visual Preview Card matching Tayo */}
-                  <div className="w-full p-2.5 shadow-inner rounded-3xl transition-all duration-300 bg-surface-muted overflow-hidden group-hover:bg-base/10">
-                    <div className="relative w-full aspect-video bg-gradient-to-br from-base/5 to-base/10 rounded-2xl flex flex-col items-center justify-center p-4 text-center">
-                      <span className="text-4xl sm:text-5xl font-bold text-base/20 select-none">
-                        {project.title.charAt(0)}
-                      </span>
-                      <span className="text-xs font-mono text-base/40 mt-1 uppercase tracking-wider">
-                        {projectTags[0] || ""}
-                      </span>
+                  <div
+                    onClick={() => {
+                      if (projectImages.length > 0) {
+                        setLightboxState({ project, initialIndex: 0 });
+                      } else {
+                        setSelectedCaseStudy(project);
+                      }
+                    }}
+                    className="w-full p-2.5 shadow-inner rounded-3xl transition-all duration-300 bg-surface-muted overflow-hidden group-hover:bg-base/10 cursor-pointer"
+                  >
+                    <div className="relative w-full aspect-video bg-gradient-to-br from-base/5 to-base/10 rounded-2xl flex flex-col items-center justify-center overflow-hidden">
+                      {coverImage ? (
+                        <>
+                          <img
+                            src={coverImage}
+                            alt={project.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          {/* Subtle Hover Overlay */}
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
+                            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md text-white text-xs font-mono font-semibold flex items-center gap-1.5 border border-white/15 shadow-lg">
+                              <ZoomIn className="w-3.5 h-3.5" />
+                              {projectImages.length > 1
+                                ? `View ${projectImages.length} Photos`
+                                : "Zoom Image"}
+                            </span>
+                          </div>
+                          {projectImages.length > 1 && (
+                            <span className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-mono font-semibold flex items-center gap-1.5 border border-white/15 shadow-md">
+                              <Images className="w-3.5 h-3.5" />
+                              {projectImages.length}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <div className="p-4 text-center flex flex-col items-center justify-center">
+                          <span className="text-4xl sm:text-5xl font-bold text-base/20 select-none">
+                            {project.title.charAt(0)}
+                          </span>
+                          <span className="text-xs font-mono text-base/40 mt-1 uppercase tracking-wider">
+                            {projectTags[0] || ""}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -113,7 +185,7 @@ export default function Projects({ projects }: ProjectsProps) {
                     </p>
 
                     <div className="flex flex-wrap gap-1.5 mt-3">
-                      {projectTags.slice(0, 3).map((tag) => (
+                      {projectTags.slice(0, 3).map((tag: string) => (
                         <span
                           key={tag}
                           className="text-[11px] bg-base/5 text-base/70 px-2.5 py-0.5 rounded-full font-medium"
@@ -142,9 +214,19 @@ export default function Projects({ projects }: ProjectsProps) {
                 </button>
 
                 <div className="flex items-center gap-3">
-                  {project.liveUrl && (
+                  {projectImages.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setLightboxState({ project, initialIndex: 0 })}
+                      className="text-fg/50 hover:text-fg transition-colors cursor-pointer"
+                      title="View Project Gallery"
+                    >
+                      <Images className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {liveHref && (
                     <a
-                      href={project.liveUrl}
+                      href={liveHref}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-fg/50 hover:text-fg transition-colors"
@@ -178,11 +260,18 @@ export default function Projects({ projects }: ProjectsProps) {
         </div>
       </div>
 
-      {/* Case Study Modal (Clean, Light, Tayo Aesthetic) */}
+      {/* Portal-mounted Multi-Image Lightbox Modal */}
+      <ProjectLightbox
+        project={lightboxState?.project || null}
+        initialIndex={lightboxState?.initialIndex || 0}
+        onClose={() => setLightboxState(null)}
+      />
+
+      {/* Case Study Modal (Clean, Light, Tayo Aesthetic — supports both custom caseStudy & CMS projects) */}
       <AnimatePresence>
-        {selectedCaseStudy && selectedCaseStudy.caseStudy && (
+        {selectedCaseStudy && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 z-[90] flex items-center justify-center p-4 sm:p-6 bg-black/55 backdrop-blur-sm"
             onClick={() => setSelectedCaseStudy(null)}
           >
             <motion.div
@@ -196,81 +285,150 @@ export default function Projects({ projects }: ProjectsProps) {
               <div className="flex items-center justify-between border-b border-base/10 pb-4 mb-6">
                 <div>
                   <span className="text-xs font-mono uppercase tracking-wider text-base/50">
-                    Case Study • {selectedCaseStudy.year}
+                    Case Study • {selectedCaseStudy.year || "2024"}
                   </span>
                   <h3 className="text-2xl font-bold text-base mt-1">
                     {selectedCaseStudy.title}
                   </h3>
-                  <p className="text-sm text-base/70 font-medium">
-                    {selectedCaseStudy.subtitle}
-                  </p>
+                  {selectedCaseStudy.subtitle && (
+                    <p className="text-sm text-base/70 font-medium">
+                      {selectedCaseStudy.subtitle}
+                    </p>
+                  )}
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedCaseStudy(null)}
-                  className="w-10 h-10 rounded-full bg-base/5 hover:bg-base/10 flex items-center justify-center transition-colors text-base"
+                  className="w-10 h-10 rounded-full bg-base/5 hover:bg-base/10 flex items-center justify-center transition-colors text-base cursor-pointer"
                   aria-label="Close case study"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="space-y-6 text-sm text-base/80 leading-relaxed">
-                <div>
-                  <h4 className="text-xs font-mono uppercase tracking-widest text-base font-bold mb-2">
-                    01. The Challenge
+              {/* Project Image Gallery inside Case Study (click any image to zoom) */}
+              {getProjectImages(selectedCaseStudy).length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-xs font-mono uppercase tracking-widest text-base font-bold mb-2.5">
+                    Project Gallery ({getProjectImages(selectedCaseStudy).length})
                   </h4>
-                  <p className="bg-surface-muted p-4 rounded-2xl border border-base/10">
-                    {selectedCaseStudy.caseStudy.challenge}
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="text-xs font-mono uppercase tracking-widest text-base font-bold mb-2">
-                    02. The Solution
-                  </h4>
-                  <p className="bg-surface-muted p-4 rounded-2xl border border-base/10">
-                    {selectedCaseStudy.caseStudy.solution}
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="text-xs font-mono uppercase tracking-widest text-base font-bold mb-2">
-                    03. Tech Stack
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCaseStudy.caseStudy.techStack.map((tech) => (
-                      <span
-                        key={tech}
-                        className="bg-base/5 text-base px-3 py-1 rounded-full text-xs font-medium"
+                  <div
+                    className={`grid gap-2.5 ${
+                      getProjectImages(selectedCaseStudy).length === 1
+                        ? "grid-cols-1"
+                        : "grid-cols-2 sm:grid-cols-3"
+                    }`}
+                  >
+                    {getProjectImages(selectedCaseStudy).map((imgUrl, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() =>
+                          setLightboxState({
+                            project: selectedCaseStudy,
+                            initialIndex: idx,
+                          })
+                        }
+                        className="relative aspect-video rounded-xl overflow-hidden border border-base/10 bg-surface-muted cursor-zoom-in group/thumb"
                       >
-                        {tech}
-                      </span>
+                        <img
+                          src={imgUrl}
+                          alt={`${selectedCaseStudy.title} screenshot ${idx + 1}`}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-105"
+                        />
+                      </div>
                     ))}
                   </div>
                 </div>
+              )}
 
-                <div>
-                  <h4 className="text-xs font-mono uppercase tracking-widest text-base font-bold mb-2">
-                    04. Key Lessons Learned
-                  </h4>
-                  <p className="bg-surface-muted p-4 rounded-2xl border border-base/10">
-                    {selectedCaseStudy.caseStudy.lessons}
-                  </p>
+              {selectedCaseStudy.caseStudy ? (
+                <div className="space-y-6 text-sm text-base/80 leading-relaxed">
+                  <div>
+                    <h4 className="text-xs font-mono uppercase tracking-widest text-base font-bold mb-2">
+                      01. The Challenge
+                    </h4>
+                    <p className="bg-surface-muted p-4 rounded-2xl border border-base/10">
+                      {selectedCaseStudy.caseStudy.challenge}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs font-mono uppercase tracking-widest text-base font-bold mb-2">
+                      02. The Solution
+                    </h4>
+                    <p className="bg-surface-muted p-4 rounded-2xl border border-base/10">
+                      {selectedCaseStudy.caseStudy.solution}
+                    </p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs font-mono uppercase tracking-widest text-base font-bold mb-2">
+                      03. Tech Stack
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCaseStudy.caseStudy.techStack.map((tech) => (
+                        <span
+                          key={tech}
+                          className="bg-base/5 text-base px-3 py-1 rounded-full text-xs font-medium"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs font-mono uppercase tracking-widest text-base font-bold mb-2">
+                      04. Key Lessons Learned
+                    </h4>
+                    <p className="bg-surface-muted p-4 rounded-2xl border border-base/10">
+                      {selectedCaseStudy.caseStudy.lessons}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-5 text-sm text-base/80 leading-relaxed">
+                  <div>
+                    <h4 className="text-xs font-mono uppercase tracking-widest text-base font-bold mb-2">
+                      Overview
+                    </h4>
+                    <p className="bg-surface-muted p-4 rounded-2xl border border-base/10">
+                      {selectedCaseStudy.description}
+                    </p>
+                  </div>
+                  {(selectedCaseStudy.tags || (selectedCaseStudy as any).techStack || []).length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-mono uppercase tracking-widest text-base font-bold mb-2">
+                        Tech Stack
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {(selectedCaseStudy.tags || (selectedCaseStudy as any).techStack || []).map(
+                          (tech: string) => (
+                            <span
+                              key={tech}
+                              className="bg-base/5 text-base px-3 py-1 rounded-full text-xs font-medium"
+                            >
+                              {tech}
+                            </span>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="mt-8 pt-4 border-t border-base/10 flex items-center justify-between">
                 <button
                   type="button"
                   onClick={() => setSelectedCaseStudy(null)}
-                  className="px-5 py-2.5 rounded-full text-xs font-semibold bg-base/5 hover:bg-base/10 text-base transition-colors"
+                  className="px-5 py-2.5 rounded-full text-xs font-semibold bg-base/5 hover:bg-base/10 text-base transition-colors cursor-pointer"
                 >
                   Close
                 </button>
-                {selectedCaseStudy.liveUrl && (
+                {(selectedCaseStudy.liveUrl || selectedCaseStudy.projectUrl) && (
                   <a
-                    href={selectedCaseStudy.liveUrl}
+                    href={(selectedCaseStudy.liveUrl || selectedCaseStudy.projectUrl) as string}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-semibold bg-base text-bg hover:bg-base/85 transition-colors"
