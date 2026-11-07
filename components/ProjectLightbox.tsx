@@ -21,6 +21,16 @@ interface ProjectLightboxProps {
   onClose: () => void;
 }
 
+export function normalizeExternalUrl(url?: string | null): string {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  if (/^(https?:\/\/|mailto:|tel:|\/|#)/i.test(trimmed)) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+}
+
 export function getProjectImages(project: LightboxProject | null | undefined): string[] {
   if (!project) return [];
   if (Array.isArray(project.images) && project.images.length > 0) {
@@ -90,7 +100,7 @@ export default function ProjectLightbox({
 
   if (!mounted || !project) return null;
 
-  const liveHref = project.liveUrl || project.projectUrl;
+  const liveHref = normalizeExternalUrl(project.liveUrl || project.projectUrl);
 
   return createPortal(
     <div

@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Project } from "@/types";
 import { ArrowUpRight, X, ExternalLink, Images, ZoomIn } from "lucide-react";
 import { easeOut, easeSoft, viewportOnce } from "@/lib/motion";
-import ProjectLightbox, { getProjectImages } from "@/components/ProjectLightbox";
+import ProjectLightbox, { getProjectImages, normalizeExternalUrl } from "@/components/ProjectLightbox";
 import { api } from "@/lib/api-client";
 
 interface ProjectsProps {
@@ -101,7 +101,8 @@ export default function Projects({ projects }: ProjectsProps) {
             const projectTags = project.tags || (project as any).techStack || [];
             const projectImages = getProjectImages(project);
             const coverImage = projectImages[0];
-            const liveHref = project.liveUrl || project.projectUrl;
+            const liveHref = normalizeExternalUrl(project.liveUrl || project.projectUrl);
+            const githubHref = normalizeExternalUrl(project.githubUrl);
 
             return (
               <motion.div
@@ -235,9 +236,9 @@ export default function Projects({ projects }: ProjectsProps) {
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   )}
-                  {project.githubUrl && (
+                  {githubHref && (
                     <a
-                      href={project.githubUrl}
+                      href={githubHref}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-fg/50 hover:text-fg transition-colors"
@@ -426,9 +427,11 @@ export default function Projects({ projects }: ProjectsProps) {
                 >
                   Close
                 </button>
-                {(selectedCaseStudy.liveUrl || selectedCaseStudy.projectUrl) && (
+                {normalizeExternalUrl(selectedCaseStudy.liveUrl || selectedCaseStudy.projectUrl) && (
                   <a
-                    href={(selectedCaseStudy.liveUrl || selectedCaseStudy.projectUrl) as string}
+                    href={normalizeExternalUrl(
+                      selectedCaseStudy.liveUrl || selectedCaseStudy.projectUrl
+                    )}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-semibold bg-base text-bg hover:bg-base/85 transition-colors"

@@ -331,6 +331,12 @@ export default function AdminDashboardPage() {
       .map((t) => t.trim())
       .filter(Boolean);
 
+    const normalizeUrl = (raw: string) => {
+      const t = raw.trim();
+      if (!t) return null;
+      return /^(https?:\/\/|mailto:|tel:|\/)/i.test(t) ? t : `https://${t}`;
+    };
+
     const finalImages = formData.images.filter(Boolean);
     const payload = {
       title: formData.title,
@@ -339,8 +345,8 @@ export default function AdminDashboardPage() {
       techStack: techArray,
       images: finalImages,
       imageUrl: finalImages[0] || null,
-      projectUrl: formData.projectUrl || null,
-      githubUrl: formData.githubUrl || null,
+      projectUrl: normalizeUrl(formData.projectUrl),
+      githubUrl: normalizeUrl(formData.githubUrl),
       order: Number(formData.order) || 1,
     };
 
@@ -558,7 +564,11 @@ export default function AdminDashboardPage() {
                     <div className="flex items-center gap-2">
                       {proj.projectUrl && (
                         <a
-                          href={proj.projectUrl}
+                          href={
+                            /^(https?:\/\/|\/)/i.test(proj.projectUrl.trim())
+                              ? proj.projectUrl.trim()
+                              : `https://${proj.projectUrl.trim()}`
+                          }
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-1.5 rounded hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
