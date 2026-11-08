@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowRight, CheckCircle2, Mail, ArrowUpRight } from "lucide-react";
+import { CheckCircle2, Mail, ArrowUpRight } from "lucide-react";
 import { sendContactMessage } from "@/lib/contact";
-import { motion, AnimatePresence } from "framer-motion";
 
 export default function Footer() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -80,7 +79,7 @@ export default function Footer() {
 
               <div className="flex items-center gap-2.5 text-sm text-base/70 font-medium">
                 <Mail className="w-4 h-4 text-base/60" />
-                <span>edgar@raged.dev</span>
+                <span>edgar.edmanata@gmail.com</span>
               </div>
             </div>
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Github, Instagram, NewTwitterIcon } from '@hugeicons/core-free-icons';
+import { Github, Instagram, Linkedin01Icon } from '@hugeicons/core-free-icons';
 import RopeToggle from './RopeToggle';
 
 const navLinks = [
@@ -15,9 +15,9 @@ const navLinks = [
 ];
 
 const socials = [
-  { href: "https://x.com", icon: NewTwitterIcon, label: "Twitter" },
-  { href: "https://instagram.com", icon: Instagram, label: "Instagram" },
+  { href: "https://www.linkedin.com/in/christopher-edgar-id/", icon: Linkedin01Icon, label: "LinkedIn" },
   { href: "https://github.com/Raged9", icon: Github, label: "GitHub" },
+  { href: "https://www.instagram.com/christopheredgar_/", icon: Instagram, label: "Instagram" },
 ];
 
 export default function Navbar() {

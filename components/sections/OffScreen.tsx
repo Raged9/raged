@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { OffScreenPhoto } from "@/types";
 import { Coffee, Moon, Sun, Compass, Monitor, Sparkles } from "lucide-react";
+import OffScreenAsciiBg from "./OffScreenAsciiBg";
+import { api } from "@/lib/api-client";
 
 interface OffScreenProps {
   initialPhotos?: OffScreenPhoto[];
@@ -11,11 +13,23 @@ interface OffScreenProps {
 const rotations = [-10, -8, -6, -4, -1, 4, 6, 8];
 
 export default function OffScreen({ initialPhotos = [] }: OffScreenProps) {
+  const [livePhotos, setLivePhotos] = useState<OffScreenPhoto[]>(initialPhotos);
   const [hovered, setHovered] = useState<number | null>(null);
 
+  useEffect(() => {
+    api
+      .getPhotos()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setLivePhotos(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const photos =
-    initialPhotos.length > 0
-      ? initialPhotos
+    livePhotos.length > 0
+      ? livePhotos
       : [
           { id: "photo-1", caption: "morning coffee & toast", imageUrl: "", order: 1 },
           { id: "photo-2", caption: "night lights", imageUrl: "", order: 2 },
@@ -30,8 +44,11 @@ export default function OffScreen({ initialPhotos = [] }: OffScreenProps) {
   const anyHovered = hovered !== null;
 
   return (
-    <section className="flex flex-col max-w-4xl w-full p-6 sm:p-7 mx-auto justify-center items-center py-12 sm:py-16 select-none">
-      <div className="flex w-full flex-col">
+    <section className="relative flex flex-col max-w-4xl w-full p-6 sm:p-7 mx-auto justify-center items-center py-12 sm:py-16 select-none">
+      {/* Ambient Classic ASCII Animations (Left: Vintage Typewriter, Right: Orbiting Paper Airplane) */}
+      <OffScreenAsciiBg />
+
+      <div className="relative z-10 flex w-full flex-col">
         {/* Title matching Tayo source code */}
         <h2 className="serif text-2xl sm:text-3xl font-bold text-base mb-8 ml-0 sm:ml-8 text-left">
           off screen.

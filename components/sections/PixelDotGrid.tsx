@@ -401,13 +401,13 @@ export default function PixelDotGrid() {
               data-dot-index={index}
               onPointerEnter={() => handleCellPointerEnter(index)}
               onPointerLeave={() => handleCellPointerLeave(index)}
-              className="w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 flex items-center justify-center cursor-crosshair"
+              className="w-[7.2px] h-[7.2px] sm:w-[9px] sm:h-[9px] md:w-[10.8px] md:h-[10.8px] flex items-center justify-center cursor-crosshair"
             >
               <div
                 ref={(el) => {
                   dotElementsRef.current[index] = el;
                 }}
-                className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full pointer-events-none"
+                className="w-[5.4px] h-[5.4px] sm:w-[7.2px] sm:h-[7.2px] rounded-full pointer-events-none"
                 style={{
                   backgroundColor: isDark ? "var(--dot-on)" : "var(--dot-off)",
                 }}

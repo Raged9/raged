@@ -33,33 +33,33 @@ export default function Projects({ projects }: ProjectsProps) {
       .catch(() => {});
   }, []);
 
-  const categories = ["All", "Web Apps", "Systems & NLP"];
+  const categories = ["All", "Web Apps", "Mobile & UI/UX", "Systems & NLP"];
 
   const filteredProjects =
     activeCategory === "All"
       ? liveProjects
       : activeCategory === "Web Apps"
       ? liveProjects.filter((p) =>
-          (p.tags || (p as any).techStack || []).some(
-            (t: string) =>
-              t.includes("React") ||
-              t.includes("Next.js") ||
-              t.includes("CMS") ||
-              t.includes("TypeScript") ||
-              t.includes("Tailwind")
+          (p.tags || (p as any).techStack || []).some((t: string) =>
+            /\b(react|next\.?js|cms|typescript|tailwind|node\.?js|express|bootstrap|mongodb)\b/i.test(t)
+          )
+        )
+      : activeCategory === "Mobile & UI/UX"
+      ? liveProjects.filter((p) =>
+          (p.tags || (p as any).techStack || []).some((t: string) =>
+            /\b(flutter|dart|mobile|ui\/ux|ui|ux|android|ios|figma|provider)\b/i.test(t)
           )
         )
       : liveProjects.filter((p) =>
-          (p.tags || (p as any).techStack || []).some(
-            (t: string) =>
-              t.includes("Python") || t.includes("NLP") || t.includes("FastAPI")
+          (p.tags || (p as any).techStack || []).some((t: string) =>
+            /\b(python|nlp|fastapi|bm25|groq|gradio|scikit-learn|nltk|sentence-transformers|machine learning|ai)\b/i.test(t)
           )
         );
 
   return (
     <section
       id="projects"
-      className="flex flex-col py-16 px-6 md:px-9 relative max-w-304 w-full mx-auto"
+      className="flex flex-col pt-13 pb-16 px-6 md:px-9 relative max-w-304 w-full mx-auto"
     >
       <motion.h2
         className="text-2xl sm:text-3xl md:text-4xl w-full max-w-4xl text-base font-bold tracking-tight leading-snug"

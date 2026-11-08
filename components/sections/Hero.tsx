@@ -87,7 +87,7 @@ export default function Hero({ projects = [] }: HeroProps) {
   return (
     <section
       id="hero"
-      className="relative z-10 flex pt-32 sm:pt-32 md:pt-28 pb-10 flex-col max-w-304 w-full mx-auto px-6 sm:px-10 md:px-12 lg:px-16 justify-center"
+      className="relative z-10 flex pt-32 sm:pt-32 md:pt-28 pb-8 flex-col max-w-304 w-full mx-auto px-6 sm:px-10 md:px-12 lg:px-16 justify-center"
     >
       {/* Top Part: Intro Text + Pixel Dot Grid */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-12 lg:gap-14 w-full">
@@ -104,9 +104,9 @@ export default function Hero({ projects = [] }: HeroProps) {
             transition={{ duration: 0.7, ease: easeOut }}
             className="text-3xl sm:text-[34px] font-bold text-base leading-[1.25] tracking-tight"
           >
-            <span className="inline-flex items-center align-baseline">
+            <span className="inline-flex flex-wrap items-center align-baseline">
               <span
-                className={`${borel.className} font-normal text-3xl sm:text-[34px] text-base mr-2.5 leading-none inline-block relative top-[9px] sm:top-[10px]`}
+                className={`${borel.className} font-normal text-3xl sm:text-[34px] text-base mr-2.5 leading-none inline-block relative top-[0.29em]`}
                 style={{ letterSpacing: "normal" }}
               >
                 hello,
@@ -174,7 +174,7 @@ export default function Hero({ projects = [] }: HeroProps) {
         initial={reduceMotion ? false : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.45, ease: easeOut }}
-        className="mt-10 sm:mt-12 relative z-10 overflow-hidden w-[calc(100%+3rem)] sm:w-[calc(100%+5rem)] md:w-[calc(100%+6rem)] -mx-6 sm:-mx-10 md:-mx-12 py-8 select-none"
+        className="mt-8 sm:mt-9 relative z-10 overflow-hidden w-[calc(100%+3rem)] sm:w-[calc(100%+5rem)] md:w-[calc(100%+6rem)] -mx-6 sm:-mx-10 md:-mx-12 pt-6 pb-8 select-none"
         style={{
           WebkitMaskImage:
             "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",

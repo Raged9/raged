@@ -117,6 +117,21 @@ export interface OffScreenPhotoItem {
   updatedAt?: string;
 }
 
+export interface ProfileSettings {
+  fullName: string;
+  nickname: string;
+  role: string;
+  bio: string;
+  location: string;
+  university: string;
+  focus: string;
+  email: string;
+  availability: string;
+  cvUrl: string;
+  cvFileName: string;
+  updatedAt?: string;
+}
+
 export const api = {
   // Health
   checkHealth: () =>
@@ -175,6 +190,14 @@ export const api = {
   submitContact: (data: { name: string; email: string; message: string }) =>
     apiFetch<{ success: boolean }>("/api/contact", {
       method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Profile & CV Settings
+  getProfile: () => apiFetch<ProfileSettings>("/api/profile"),
+  updateProfile: (data: Partial<ProfileSettings>) =>
+    apiFetch<ProfileSettings>("/api/profile", {
+      method: "PUT",
       body: JSON.stringify(data),
     }),
 };

@@ -18,8 +18,10 @@ import {
   Camera,
   Upload,
   Image as ImageIcon,
+  FileText,
+  UserCheck,
 } from 'lucide-react';
-import { api, ProjectItem, OffScreenPhotoItem, removeToken } from '@/lib/api-client';
+import { api, ProjectItem, OffScreenPhotoItem, ProfileSettings, removeToken } from '@/lib/api-client';
 
 /**
  * Processes an uploaded image file:
@@ -87,9 +89,24 @@ async function processImageFile(file: File, maxDimension = 1200, quality = 0.84)
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'projects' | 'photos'>('projects');
+  const [activeTab, setActiveTab] = useState<'projects' | 'photos' | 'profile'>('projects');
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [photos, setPhotos] = useState<OffScreenPhotoItem[]>([]);
+  const [profile, setProfile] = useState<ProfileSettings>({
+    fullName: 'Christopher Edgar',
+    nickname: 'Raged',
+    role: 'Informatics Student & Full-Stack / AI Builder',
+    bio: 'An Informatics student passionate about turning complex problems into clean, fast, and tactile digital products — from full-stack management systems and cross-platform Flutter mobile apps to NLP & AI explorations.',
+    location: 'Kebon Jeruk, West Jakarta, Indonesia',
+    university: 'B.Sc. in Informatics (S.Kom.)',
+    focus: 'Web · Mobile · AI/NLP',
+    email: 'edgar.edmanata@gmail.com',
+    availability: 'Available for internships, freelance & collaborations',
+    cvUrl: '/CV-Christopher-Edgar.pdf',
+    cvFileName: 'CV-Christopher-Edgar.pdf',
+  });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isUploadingCv, setIsUploadingCv] = useState(false);
   const [isSavingPhotos, setIsSavingPhotos] = useState(false);
   const [uploadingPhotoId, setUploadingPhotoId] = useState<string | null>(null);
   const [isUploadingProjectImage, setIsUploadingProjectImage] = useState(false);
@@ -141,13 +158,17 @@ export default function AdminDashboardPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [projData, photoData, healthData] = await Promise.all([
+      const [projData, photoData, profileData, healthData] = await Promise.all([
         api.getProjects().catch(() => []),
         api.getPhotos().catch(() => []),
+        api.getProfile().catch(() => null),
         api.checkHealth().catch(() => ({ status: 'ok', service: '', storage: 'unknown' })),
       ]);
       setProjects(projData);
       setPhotos(photoData);
+      if (profileData) {
+        setProfile((prev) => ({ ...prev, ...profileData }));
+      }
       if (healthData?.storage) {
         setStorageMode(healthData.storage);
       }
@@ -155,6 +176,58 @@ export default function AdminDashboardPage() {
       console.warn('Failed to fetch data:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCvFileUpload = async (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > 12 * 1024 * 1024) {
+      setStatusMessage({ type: 'error', text: 'Ukuran file CV maksimal 12MB' });
+      return;
+    }
+    setIsUploadingCv(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Gagal membaca file CV'));
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      setProfile((prev) => ({
+        ...prev,
+        cvUrl: dataUrl,
+        cvFileName: file.name || 'CV-Christopher-Edgar.pdf',
+      }));
+      setStatusMessage({
+        type: 'success',
+        text: `File CV "${file.name}" berhasil dimuat! Klik "Save Profile & CV" untuk menyimpan ke database.`,
+      });
+      setTimeout(() => setStatusMessage(null), 4000);
+    } catch (err: any) {
+      setStatusMessage({ type: 'error', text: err.message || 'Gagal membaca file CV' });
+    } finally {
+      setIsUploadingCv(false);
+    }
+  };
+
+  const handleSaveProfile = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setIsSavingProfile(true);
+    try {
+      const updated = await api.updateProfile(profile);
+      setProfile(updated);
+      setStatusMessage({
+        type: 'success',
+        text: 'Profile & CV settings berhasil disimpan ke database!',
+      });
+      setTimeout(() => setStatusMessage(null), 3500);
+    } catch (err: any) {
+      setStatusMessage({
+        type: 'error',
+        text: err.message || 'Gagal menyimpan Profile & CV',
+      });
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -480,6 +553,17 @@ export default function AdminDashboardPage() {
             <Camera className="w-4 h-4" />
             Off-Screen Photos ({photos.length})
           </button>
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
+              activeTab === 'profile'
+                ? 'bg-[#3E4F36] text-white border border-[#A3B899]/40 shadow-md'
+                : 'bg-neutral-900/60 text-neutral-400 hover:text-white border border-transparent'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            Profile &amp; CV (/contact)
+          </button>
         </div>
 
         {activeTab === 'projects' ? (
@@ -601,7 +685,7 @@ export default function AdminDashboardPage() {
               ))}
             </div>
           </>
-        ) : (
+        ) : activeTab === 'photos' ? (
           /* Off-Screen Photo Cards CMS Tab */
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
@@ -777,6 +861,253 @@ export default function AdminDashboardPage() {
               })}
             </div>
           </div>
+        ) : (
+          /* Profile & CV (/contact) CMS Tab */
+          <form onSubmit={handleSaveProfile} className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
+              <div>
+                <h1 className="text-3xl font-black tracking-tight text-white uppercase flex items-center gap-2.5">
+                  <UserCheck className="w-7 h-7 text-[#A3B899]" />
+                  Profile, Biodata &amp; CV Manager (/contact)
+                </h1>
+                <p className="text-neutral-400 text-sm mt-1">
+                  Kelola file/link Download CV dan biodata singkat yang ditampilkan di halaman <code className="text-[#A3B899]">/contact</code>.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSavingProfile}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-[#3E4F36] hover:bg-[#2E3B27] text-white font-bold text-sm transition-all shadow-lg self-start sm:self-auto border border-[#A3B899]/30 disabled:opacity-50 cursor-pointer"
+              >
+                <Save className="w-4 h-4" />
+                {isSavingProfile ? 'Saving...' : 'Save Profile & CV'}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Left Column: CV Upload & Link Input */}
+              <div className="lg:col-span-5 bg-[#181818] border border-neutral-800 rounded-2xl p-6 space-y-5 h-fit">
+                <div className="flex items-center gap-2.5 border-b border-neutral-800 pb-3">
+                  <FileText className="w-5 h-5 text-[#A3B899]" />
+                  <h2 className="text-lg font-bold text-white uppercase tracking-tight">
+                    Download CV / Resume File
+                  </h2>
+                </div>
+
+                <p className="text-xs text-neutral-400 leading-relaxed">
+                  Kamu bisa langsung <strong>upload file PDF CV</strong> dari perangkatmu (otomatis disimpan di database PostgreSQL) atau menempelkan <strong>Link URL CV</strong> (misalnya Google Drive / Dropbox / URL eksternal).
+                </p>
+
+                {/* Upload PDF Button */}
+                <label className="w-full py-4 px-4 rounded-xl bg-[#3E4F36]/30 hover:bg-[#3E4F36]/50 border-2 border-dashed border-[#A3B899]/50 text-[#A3B899] text-xs font-bold flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors">
+                  <Upload className="w-5 h-5" />
+                  <span>
+                    {isUploadingCv
+                      ? 'Membaca file CV...'
+                      : 'Klik untuk Upload File PDF CV dari Perangkat'}
+                  </span>
+                  <span className="text-[11px] font-normal text-neutral-400">
+                    Mendukung .pdf (Maks. 12MB)
+                  </span>
+                  <input
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    className="hidden"
+                    onChange={(e) => handleCvFileUpload(e.target.files?.[0])}
+                  />
+                </label>
+
+                {profile.cvUrl?.startsWith('data:') && (
+                  <div className="p-3 rounded-lg bg-emerald-950/50 border border-emerald-700/40 flex items-center justify-between gap-2">
+                    <div className="text-xs text-emerald-300 truncate">
+                      ✓ File PDF tersimpan: <strong>{profile.cvFileName || 'CV.pdf'}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setProfile((prev) => ({
+                          ...prev,
+                          cvUrl: '/CV-Christopher-Edgar.pdf',
+                        }))
+                      }
+                      className="text-[11px] text-red-400 hover:underline shrink-0"
+                    >
+                      Reset ke URL
+                    </button>
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1.5">
+                    Atau Input Link URL CV (Google Drive / Direct Link)
+                  </label>
+                  <input
+                    type="text"
+                    value={profile.cvUrl?.startsWith('data:') ? '' : profile.cvUrl}
+                    onChange={(e) =>
+                      setProfile((prev) => ({ ...prev, cvUrl: e.target.value }))
+                    }
+                    placeholder="https://drive.google.com/... atau /CV-Christopher-Edgar.pdf"
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1.5">
+                    Nama File Saat Di-download
+                  </label>
+                  <input
+                    type="text"
+                    value={profile.cvFileName || ''}
+                    onChange={(e) =>
+                      setProfile((prev) => ({ ...prev, cvFileName: e.target.value }))
+                    }
+                    placeholder="CV-Christopher-Edgar.pdf"
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                  />
+                </div>
+              </div>
+
+              {/* Right Column: Biodata Fields */}
+              <div className="lg:col-span-7 bg-[#181818] border border-neutral-800 rounded-2xl p-6 space-y-4">
+                <div className="flex items-center gap-2.5 border-b border-neutral-800 pb-3">
+                  <UserCheck className="w-5 h-5 text-[#A3B899]" />
+                  <h2 className="text-lg font-bold text-white uppercase tracking-tight">
+                    Biodata Singkat (/contact)
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                      Nama Lengkap
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.fullName}
+                      onChange={(e) =>
+                        setProfile((prev) => ({ ...prev, fullName: e.target.value }))
+                      }
+                      className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                      Nickname / Handle
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.nickname}
+                      onChange={(e) =>
+                        setProfile((prev) => ({ ...prev, nickname: e.target.value }))
+                      }
+                      className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                    Role / Headline
+                  </label>
+                  <input
+                    type="text"
+                    value={profile.role}
+                    onChange={(e) =>
+                      setProfile((prev) => ({ ...prev, role: e.target.value }))
+                    }
+                    className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                    Biodata Singkat
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={profile.bio}
+                    onChange={(e) =>
+                      setProfile((prev) => ({ ...prev, bio: e.target.value }))
+                    }
+                    className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                      Lokasi
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.location}
+                      onChange={(e) =>
+                        setProfile((prev) => ({ ...prev, location: e.target.value }))
+                      }
+                      className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                      Pendidikan / Kampus
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.university}
+                      onChange={(e) =>
+                        setProfile((prev) => ({ ...prev, university: e.target.value }))
+                      }
+                      className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                      Fokus Keahlian
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.focus}
+                      onChange={(e) =>
+                        setProfile((prev) => ({ ...prev, focus: e.target.value }))
+                      }
+                      className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                      Email Kontak
+                    </label>
+                    <input
+                      type="email"
+                      value={profile.email}
+                      onChange={(e) =>
+                        setProfile((prev) => ({ ...prev, email: e.target.value }))
+                      }
+                      className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                      Status Ketersediaan
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.availability}
+                      onChange={(e) =>
+                        setProfile((prev) => ({ ...prev, availability: e.target.value }))
+                      }
+                      className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
         )}
       </main>
 
