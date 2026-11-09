@@ -72,28 +72,30 @@ export default function Projects({ projects }: ProjectsProps) {
       </motion.h2>
 
       <div className="py-6 gap-6 w-full flex flex-col">
-        {/* Category Filter Pills (Tayo-style) */}
-        <motion.div
-          className="bg-surface-muted w-fit max-w-full my-2 p-1.5 rounded-full flex flex-wrap gap-2 border-4 shadow-inner border-surface"
-          initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={viewportOnce}
-          transition={{ duration: 0.6, delay: 0.1, ease: easeOut }}
-        >
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`py-2 px-5 text-xs md:text-sm rounded-full font-semibold transition-all duration-300 ${
-                activeCategory === cat
-                  ? "bg-base text-bg shadow-sm"
-                  : "text-fg/50 hover:text-fg"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </motion.div>
+        {/* Category Filter Pills (Tayo-style, scrollable on mobile) */}
+        <div className="w-full overflow-x-auto no-scrollbar py-1 -my-1">
+          <motion.div
+            className="bg-surface-muted w-max max-w-full my-2 p-1 sm:p-1.5 rounded-full flex items-center gap-1 sm:gap-2 border-2 sm:border-4 shadow-inner border-surface"
+            initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={viewportOnce}
+            transition={{ duration: 0.6, delay: 0.1, ease: easeOut }}
+          >
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`py-1.5 sm:py-2 px-3.5 sm:px-5 text-xs sm:text-sm rounded-full font-semibold transition-all duration-300 whitespace-nowrap cursor-pointer shrink-0 ${
+                  activeCategory === cat
+                    ? "bg-base text-bg shadow-sm"
+                    : "text-fg/50 hover:text-fg"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </motion.div>
+        </div>
 
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 w-full mt-4">

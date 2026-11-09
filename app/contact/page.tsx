@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import LanyardBadge from "@/components/contact/LanyardBadge";
+import HanglineGallery from "@/components/contact/HanglineGallery";
 import DinoDotMatrix from "@/components/sections/DinoDotMatrix";
 import { api, ProfileSettings } from "@/lib/api-client";
 import { sendContactMessage } from "@/lib/contact";
@@ -36,6 +37,7 @@ const DEFAULT_PROFILE: ProfileSettings = {
   bio: "An Informatics student passionate about turning complex problems into clean, fast, and tactile digital products — from full-stack management systems and cross-platform Flutter mobile apps to NLP & AI explorations.",
   location: "Kebon Jeruk, West Jakarta, Indonesia",
   university: "B.Sc. in Informatics (S.Kom.)",
+  gpa: "3.78/4",
   focus: "Web · Mobile · AI/NLP",
   email: "edgar.edmanata@gmail.com",
   availability: "Available for internships, freelance & collaborations",
@@ -254,6 +256,7 @@ function normalizeCvHref(url?: string): string {
 export default function ContactPage() {
   const [profile, setProfile] = useState<ProfileSettings>(DEFAULT_PROFILE);
   const [copied, setCopied] = useState(false);
+  const [hanglineOpenSignal, setHanglineOpenSignal] = useState(0);
 
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -315,7 +318,7 @@ export default function ContactPage() {
     "w-full bg-transparent text-base text-sm placeholder:text-base/30 border-b border-base/10 py-3.5 outline-none focus:border-base/40 transition-colors duration-200";
 
   return (
-    <div className="flex scroll-smooth relative flex-col min-h-screen items-center bg-bg text-base overflow-x-hidden">
+    <div className="flex scroll-smooth relative flex-col min-h-screen items-center bg-bg text-base overflow-x-clip">
       {/* Tayo's distinctive dashed vertical margin lines */}
       <div className="hidden lg:block h-full min-h-screen z-0 absolute left-8 xl:left-24 border text-base/10 border-long-dashed pointer-events-none" />
       <div className="hidden lg:block h-full min-h-screen z-0 absolute right-8 xl:right-24 border text-base/10 border-long-dashed pointer-events-none" />
@@ -402,6 +405,9 @@ export default function ContactPage() {
                   <span className="text-xs font-bold text-base leading-snug block">
                     {profile.university}
                   </span>
+                  <span className="text-[10.5px] font-mono font-medium text-base/60 block mt-0.5">
+                    GPA {profile.gpa || "3.78/4"}
+                  </span>
                 </div>
               </div>
 
@@ -456,6 +462,16 @@ export default function ContactPage() {
                     <span>{profile.email}</span>
                   </>
                 )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setHanglineOpenSignal((s) => s + 1)}
+                className="py-3 px-4 min-h-11 rounded-[13px] text-[13px] font-medium text-fg/80 bg-surface-muted border border-base/12 hover:bg-base hover:text-bg transition-all duration-200 inline-flex items-center gap-2 cursor-pointer"
+                title="Jump to Hangline Certificates & Milestones Archive"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>hangline archive ↓</span>
               </button>
             </motion.div>
 
@@ -570,7 +586,10 @@ export default function ContactPage() {
           </div>
         </section>
 
-        {/* SECTION 3: DIRECT MESSAGE FORM */}
+        {/* SECTION 3: HANGLINE ARCHIVE — Certificates, Events & Milestones */}
+        <HanglineGallery externalOpenSignal={hanglineOpenSignal} />
+
+        {/* SECTION 4: DIRECT MESSAGE FORM */}
         <section className="pt-4">
           <div className="bg-surface-muted border border-base/10 rounded-3xl p-8 sm:p-12 md:p-14">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-start">

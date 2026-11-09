@@ -30,6 +30,7 @@ const config: Config = {
         monocraft: ['"Monocraft"', "monospace"],
         pixel: ['"Monocraft"', '"Press Start 2P"', "monospace"],
         borel: ['"Borel"', "cursive"],
+        impact: ['"Anton"', "Impact", '"Arial Black"', "sans-serif"],
       },
       maxWidth: {
         "304": "76rem", // 1216px - standard max container from Tayo

@@ -441,23 +441,23 @@ export default function TypingGame({
       {/* Typewriter Machine + Side Companion Controls Layout */}
       <div className="w-full max-w-5xl flex flex-col lg:flex-row items-center lg:items-start justify-center gap-5 sm:gap-6">
         {/* Main Vintage Sage Green Typewriter Chassis */}
-        <div className="w-full max-w-3xl flex-1 rounded-3xl bg-[#52664D] border-4 border-[#3D4D37] p-5 sm:p-7 shadow-[inset_0_2px_4px_rgba(255,255,255,0.22),0_24px_60px_rgba(25,35,20,0.35)] flex flex-col items-center">
+        <div className="w-full max-w-3xl flex-1 rounded-2xl sm:rounded-3xl bg-[#52664D] border-2 sm:border-4 border-[#3D4D37] p-3 sm:p-5 md:p-7 shadow-[inset_0_2px_4px_rgba(255,255,255,0.22),0_24px_60px_rgba(25,35,20,0.35)] flex flex-col items-center">
           {/* Machine Top Plate (Clean Brand & Category Plate) */}
-          <div className="w-full flex items-center justify-between pb-3.5 mb-3 border-b border-white/20 text-xs font-monocraft text-[#EDECE5]">
-            <div className="flex items-center gap-2.5">
-              <span className="font-bold tracking-wider text-white flex items-center gap-1.5 text-xs sm:text-sm">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#B5C9AC] inline-block shadow-sm animate-pulse" />
-                ROYAL MODEL 10 • SAGE
+          <div className="w-full flex items-center justify-between pb-2.5 sm:pb-3.5 mb-2 sm:mb-3 border-b border-white/20 text-xs font-monocraft text-[#EDECE5]">
+            <div className="flex items-center gap-1.5 sm:gap-2.5">
+              <span className="font-bold tracking-wider text-white flex items-center gap-1.5 text-[11px] sm:text-xs md:text-sm">
+                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#B5C9AC] inline-block shadow-sm animate-pulse" />
+                ROYAL MODEL 10
               </span>
-              <span className="text-white/30">•</span>
-              <span className="px-2 py-0.5 rounded-full bg-black/25 text-[10px] text-white/80 border border-white/10 uppercase">
+              <span className="text-white/30 hidden xs:inline">•</span>
+              <span className="hidden xs:inline-block px-2 py-0.5 rounded-full bg-black/25 text-[10px] text-white/80 border border-white/10 uppercase">
                 {currentQuote.category || "QUOTE"}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 text-[10px] text-white/70">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-[10px] text-white/70">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span>TERMINAL READY</span>
+              <span>ONLINE</span>
             </div>
           </div>
 
@@ -500,13 +500,13 @@ export default function TypingGame({
 
           <div
             onClick={() => inputRef.current?.focus()}
-            className="relative w-full rounded-sm bg-gradient-to-b from-[#FFFDF8] via-[#FAF6EE] to-[#F2ECE0] p-6 sm:p-8 md:p-9 shadow-[0_18px_36px_-6px_rgba(0,0,0,0.22),0_6px_12px_-2px_rgba(0,0,0,0.1),inset_0_2px_4px_rgba(255,255,255,0.95)] border border-[#DDD5C5] border-r-2 border-b-2 border-r-[#C2BAAA] border-b-[#B2AA9A] cursor-text select-none min-h-[250px] sm:min-h-[290px] md:min-h-[310px] flex flex-col justify-between overflow-hidden"
+            className="relative w-full rounded-sm bg-gradient-to-b from-[#FFFDF8] via-[#FAF6EE] to-[#F2ECE0] p-4 sm:p-7 md:p-9 shadow-[0_18px_36px_-6px_rgba(0,0,0,0.22),0_6px_12px_-2px_rgba(0,0,0,0.1),inset_0_2px_4px_rgba(255,255,255,0.95)] border border-[#DDD5C5] border-r-2 border-b-2 border-r-[#C2BAAA] border-b-[#B2AA9A] cursor-text select-none min-h-[200px] sm:min-h-[270px] md:min-h-[310px] flex flex-col justify-between overflow-hidden"
           >
             {/* Top Platen Roller Shadow */}
             <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-black/15 to-transparent pointer-events-none rounded-t-sm" />
 
             {/* Left red guideline margin line (vintage paper rule) */}
-            <div className="absolute left-6 sm:left-9 top-0 bottom-0 w-px bg-rose-400/25 pointer-events-none" />
+            <div className="absolute left-3.5 sm:left-7 md:left-9 top-0 bottom-0 w-px bg-rose-400/25 pointer-events-none" />
 
             {/* Tab + Enter Prompt Floating Pill */}
             <AnimatePresence>
@@ -524,26 +524,26 @@ export default function TypingGame({
             </AnimatePresence>
 
             {/* Paper Top Stats Bar with Monocraft */}
-            <div className="flex items-center justify-between pb-3.5 mb-3 border-b border-[#302f2d]/10 font-monocraft text-xs pl-2 sm:pl-4">
-              <div className="flex items-center gap-6 sm:gap-8 text-[#302f2d]">
+            <div className="flex items-center justify-between pb-2.5 sm:pb-3.5 mb-2 sm:mb-3 border-b border-[#302f2d]/10 font-monocraft text-xs pl-1 sm:pl-3">
+              <div className="flex items-center gap-3 sm:gap-6 md:gap-8 text-[#302f2d]">
                 <div>
-                  <span className="text-[#302f2d]/40 text-[9px] uppercase tracking-wider block">
+                  <span className="text-[#302f2d]/40 text-[8px] sm:text-[9px] uppercase tracking-wider block">
                     SPEED
                   </span>
-                  <span className="font-bold text-sm sm:text-base md:text-lg">
-                    {wpm} <span className="text-[10px] font-normal text-[#302f2d]/60">WPM</span>
+                  <span className="font-bold text-xs sm:text-base md:text-lg">
+                    {wpm} <span className="text-[9px] sm:text-[10px] font-normal text-[#302f2d]/60">WPM</span>
                   </span>
                 </div>
                 <div>
-                  <span className="text-[#302f2d]/40 text-[9px] uppercase tracking-wider block">
+                  <span className="text-[#302f2d]/40 text-[8px] sm:text-[9px] uppercase tracking-wider block">
                     ACCURACY
                   </span>
-                  <span className="font-bold text-sm sm:text-base md:text-lg">
+                  <span className="font-bold text-xs sm:text-base md:text-lg">
                     {accuracy}%
                   </span>
                 </div>
-                <div className="hidden xs:block">
-                  <span className="text-[#302f2d]/40 text-[9px] uppercase tracking-wider block">
+                <div className="hidden sm:block">
+                  <span className="text-[#302f2d]/40 text-[8px] sm:text-[9px] uppercase tracking-wider block">
                     SOURCE
                   </span>
                   <span className="text-xs sm:text-sm text-[#302f2d]/80 truncate max-w-[160px] block">
@@ -553,15 +553,15 @@ export default function TypingGame({
               </div>
 
               <div className="text-right text-[#302f2d]/70 text-xs">
-                <span className="text-[#302f2d]/40 text-[9px] uppercase tracking-wider block">
+                <span className="text-[#302f2d]/40 text-[8px] sm:text-[9px] uppercase tracking-wider block">
                   TIME
                 </span>
-                <span className="font-bold text-sm sm:text-base md:text-lg">{Math.round(elapsedTime)}s</span>
+                <span className="font-bold text-xs sm:text-base md:text-lg">{Math.round(elapsedTime)}s</span>
               </div>
             </div>
 
-            {/* Typing Text Display in Monocraft: Multi-line natural wrapping, Highlights Hijau, Continuous Coret Merah, Green Current Cursor */}
-            <div className="relative font-monocraft text-sm sm:text-base md:text-[17px] leading-relaxed sm:leading-loose text-[#302f2d] py-3 min-h-[120px] sm:min-h-[150px] pl-3 sm:pl-5 whitespace-pre-wrap break-words select-none">
+            {/* Typing Text Display in Monocraft */}
+            <div className="relative font-monocraft text-xs sm:text-base md:text-[17px] leading-relaxed sm:leading-loose text-[#302f2d] py-2 sm:py-3 min-h-[90px] sm:min-h-[140px] pl-1.5 sm:pl-4 whitespace-pre-wrap break-words select-none">
               {targetText.split("").map((char, index) => {
                 const isTyped = index < userInput.length;
                 const isCurrent = index === userInput.length;
@@ -615,9 +615,9 @@ export default function TypingGame({
         </div>
 
         {/* 2. KEYBOARD MESIN TIK (Circular Vintage Ivory Keys in Monocraft) */}
-        <div className="w-full mt-5 pt-4 border-t border-white/15 flex flex-col items-center gap-2 sm:gap-2.5">
+        <div className="w-full mt-3 sm:mt-5 pt-3 sm:pt-4 border-t border-white/15 flex flex-col items-center gap-1.5 sm:gap-2.5">
           {/* Row 1 */}
-          <div className="flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2">
+          <div className="flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 w-full max-w-full overflow-hidden">
             {KEYBOARD_ROWS[0].map((key) => {
               const isActive = activeKey === key;
               return (
@@ -630,10 +630,10 @@ export default function TypingGame({
                       } as React.ChangeEvent<HTMLInputElement>);
                     }
                   }}
-                  className={`w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full border-2 transition-all flex items-center justify-center font-monocraft text-[9px] sm:text-xs font-bold shadow-md ${
+                  className={`w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full border-1.5 sm:border-2 transition-all flex items-center justify-center font-monocraft text-[8px] xs:text-[9px] sm:text-xs font-bold shadow-md shrink-0 cursor-pointer ${
                     isActive
                       ? "translate-y-1 bg-[#EBE7DC] border-white text-[#2E3B27] border-b-2 shadow-none scale-95"
-                      : "bg-[#FAF8F2] border-[#D6D0C2] border-b-4 border-b-[#B8B1A2] text-[#2E3B27] hover:bg-white hover:scale-105"
+                      : "bg-[#FAF8F2] border-[#D6D0C2] border-b-2 sm:border-b-4 border-b-[#B8B1A2] text-[#2E3B27] hover:bg-white active:scale-95"
                   }`}
                 >
                   {key}
@@ -643,7 +643,7 @@ export default function TypingGame({
           </div>
 
           {/* Row 2 */}
-          <div className="flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2">
+          <div className="flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 w-full max-w-full overflow-hidden">
             {KEYBOARD_ROWS[1].map((key) => {
               const isActive = activeKey === key;
               return (
@@ -656,10 +656,10 @@ export default function TypingGame({
                       } as React.ChangeEvent<HTMLInputElement>);
                     }
                   }}
-                  className={`w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full border-2 transition-all flex items-center justify-center font-monocraft text-[9px] sm:text-xs font-bold shadow-md ${
+                  className={`w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full border-1.5 sm:border-2 transition-all flex items-center justify-center font-monocraft text-[8px] xs:text-[9px] sm:text-xs font-bold shadow-md shrink-0 cursor-pointer ${
                     isActive
                       ? "translate-y-1 bg-[#EBE7DC] border-white text-[#2E3B27] border-b-2 shadow-none scale-95"
-                      : "bg-[#FAF8F2] border-[#D6D0C2] border-b-4 border-b-[#B8B1A2] text-[#2E3B27] hover:bg-white hover:scale-105"
+                      : "bg-[#FAF8F2] border-[#D6D0C2] border-b-2 sm:border-b-4 border-b-[#B8B1A2] text-[#2E3B27] hover:bg-white active:scale-95"
                   }`}
                 >
                   {key}
@@ -669,7 +669,7 @@ export default function TypingGame({
           </div>
 
           {/* Row 3 */}
-          <div className="flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2">
+          <div className="flex items-center justify-center gap-1 sm:gap-1.5 md:gap-2 w-full max-w-full overflow-hidden">
             {KEYBOARD_ROWS[2].map((key) => {
               const isActive = activeKey === key;
               return (
@@ -682,10 +682,10 @@ export default function TypingGame({
                       } as React.ChangeEvent<HTMLInputElement>);
                     }
                   }}
-                  className={`w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full border-2 transition-all flex items-center justify-center font-monocraft text-[9px] sm:text-xs font-bold shadow-md ${
+                  className={`w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full border-1.5 sm:border-2 transition-all flex items-center justify-center font-monocraft text-[8px] xs:text-[9px] sm:text-xs font-bold shadow-md shrink-0 cursor-pointer ${
                     isActive
                       ? "translate-y-1 bg-[#EBE7DC] border-white text-[#2E3B27] border-b-2 shadow-none scale-95"
-                      : "bg-[#FAF8F2] border-[#D6D0C2] border-b-4 border-b-[#B8B1A2] text-[#2E3B27] hover:bg-white hover:scale-105"
+                      : "bg-[#FAF8F2] border-[#D6D0C2] border-b-2 sm:border-b-4 border-b-[#B8B1A2] text-[#2E3B27] hover:bg-white active:scale-95"
                   }`}
                 >
                   {key}
@@ -701,14 +701,14 @@ export default function TypingGame({
                   playClick();
                 }
               }}
-              className="px-2 sm:px-3 h-7 sm:h-10 md:h-11 rounded-full border-2 border-[#D6D0C2] border-b-4 border-b-[#B8B1A2] bg-[#FAF8F2] text-[#2E3B27] hover:bg-white transition-all flex items-center justify-center font-monocraft text-[8px] sm:text-[10px] font-bold shadow-md"
+              className="px-2 sm:px-3 h-7 xs:h-8 sm:h-10 md:h-11 rounded-full border-1.5 sm:border-2 border-[#D6D0C2] border-b-2 sm:border-b-4 border-b-[#B8B1A2] bg-[#FAF8F2] text-[#2E3B27] hover:bg-white transition-all flex items-center justify-center font-monocraft text-[7px] sm:text-[10px] font-bold shadow-md shrink-0 active:scale-95 cursor-pointer"
             >
               DEL
             </button>
           </div>
 
           {/* Row 4: TAB, Space Bar, ENTER */}
-          <div className="w-full flex items-center justify-center gap-1.5 sm:gap-2 mt-1">
+          <div className="w-full flex items-center justify-center gap-1 sm:gap-2 mt-1">
             {/* Tab Key */}
             <button
               onClick={() => {
@@ -719,10 +719,10 @@ export default function TypingGame({
                   setShowRestartTooltip(false);
                 }, 3000);
               }}
-              className={`px-3 sm:px-4 h-7 sm:h-9 rounded-full border-2 transition-all flex items-center justify-center font-monocraft text-[9px] sm:text-[10px] font-bold shadow-md ${
+              className={`px-2.5 sm:px-4 h-7 sm:h-9 rounded-full border-1.5 sm:border-2 transition-all flex items-center justify-center font-monocraft text-[8px] sm:text-[10px] font-bold shadow-md cursor-pointer ${
                 tabPressed
                   ? "translate-y-1 bg-[#B5C9AC] border-white text-[#2E3B27] border-b-2 shadow-none"
-                  : "bg-[#FAF8F2] border-[#D6D0C2] border-b-4 border-b-[#B8B1A2] text-[#2E3B27] hover:bg-white"
+                  : "bg-[#FAF8F2] border-[#D6D0C2] border-b-2 sm:border-b-4 border-b-[#B8B1A2] text-[#2E3B27] hover:bg-white active:scale-95"
               }`}
               title="Tab + Enter to restart"
             >
@@ -738,10 +738,10 @@ export default function TypingGame({
                   } as React.ChangeEvent<HTMLInputElement>);
                 }
               }}
-              className={`w-36 sm:w-56 md:w-64 h-7 sm:h-9 rounded-full border-2 transition-all flex items-center justify-center font-monocraft text-[10px] font-bold shadow-md ${
+              className={`flex-1 max-w-[160px] xs:max-w-[200px] sm:max-w-56 md:max-w-64 h-7 sm:h-9 rounded-full border-1.5 sm:border-2 transition-all flex items-center justify-center font-monocraft text-[9px] sm:text-[10px] font-bold shadow-md cursor-pointer ${
                 activeKey === "SPACE"
                   ? "translate-y-1 bg-[#EBE7DC] border-white text-[#2E3B27] border-b-2 shadow-none scale-98"
-                  : "bg-[#FAF8F2] border-[#D6D0C2] border-b-4 border-b-[#B8B1A2] text-[#2E3B27] hover:bg-white"
+                  : "bg-[#FAF8F2] border-[#D6D0C2] border-b-2 sm:border-b-4 border-b-[#B8B1A2] text-[#2E3B27] hover:bg-white active:scale-95"
               }`}
             >
               SPACE
@@ -750,10 +750,10 @@ export default function TypingGame({
             {/* Return / Enter Key */}
             <button
               onClick={() => handleReset(true)}
-              className="px-3 sm:px-4 h-7 sm:h-9 rounded-full border-2 border-[#D6D0C2] border-b-4 border-b-[#B8B1A2] bg-[#FAF8F2] text-[#2E3B27] hover:bg-white transition-all flex items-center justify-center font-monocraft text-[9px] sm:text-[10px] font-bold shadow-md"
+              className="px-2.5 sm:px-4 h-7 sm:h-9 rounded-full border-1.5 sm:border-2 border-[#D6D0C2] border-b-2 sm:border-b-4 border-b-[#B8B1A2] bg-[#FAF8F2] text-[#2E3B27] hover:bg-white transition-all flex items-center justify-center font-monocraft text-[8px] sm:text-[10px] font-bold shadow-md cursor-pointer active:scale-95"
               title="Restart with random text"
             >
-              RETURN ↵
+              ENTER ↵
             </button>
           </div>
 

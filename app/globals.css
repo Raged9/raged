@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Borel&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
@@ -197,15 +198,23 @@ body {
     ) border-box;
 }
 
-.border-long-dashed2 {
-  border-top: 2px dashed transparent;
-  background: 
-    linear-gradient(var(--bg), var(--bg)) padding-box,
-    repeating-linear-gradient(
-      to right,
-      currentColor 0px,
-      currentColor 15px,
-      transparent 15px,
-      transparent 28px
-    ) border-box;
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes galleryBreeze {
+  0%, 100% {
+    transform: rotateZ(0deg) translateY(0px);
+  }
+  33% {
+    transform: rotateZ(0.85deg) translateY(-1px);
+  }
+  66% {
+    transform: rotateZ(-0.75deg) translateY(0.8px);
+  }
+}
+

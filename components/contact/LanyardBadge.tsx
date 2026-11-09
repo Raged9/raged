@@ -3,62 +3,14 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { RotateCw } from "lucide-react";
 
-// 5x7 Dot-Matrix Font for "RAGED."
+// 5x7 Dot-Matrix Font for Card Badge
 const DOT_FONT: Record<string, string[]> = {
-  R: [
-    "11110",
-    "10001",
-    "10001",
-    "11110",
-    "10100",
-    "10010",
-    "10001",
-  ],
-  A: [
-    "01110",
-    "10001",
-    "10001",
-    "11111",
-    "10001",
-    "10001",
-    "10001",
-  ],
-  G: [
-    "01111",
-    "10000",
-    "10000",
-    "10011",
-    "10001",
-    "10001",
-    "01111",
-  ],
-  E: [
-    "11111",
-    "10000",
-    "10000",
-    "11110",
-    "10000",
-    "10000",
-    "11111",
-  ],
-  D: [
-    "11110",
-    "10001",
-    "10001",
-    "10001",
-    "10001",
-    "10001",
-    "11110",
-  ],
-  ".": [
-    "000",
-    "000",
-    "000",
-    "000",
-    "000",
-    "011",
-    "011",
-  ],
+  R: ["11110", "10001", "10001", "11110", "10100", "10010", "10001"],
+  A: ["01110", "10001", "10001", "11111", "10001", "10001", "10001"],
+  G: ["01111", "10000", "10000", "10011", "10001", "10001", "01111"],
+  E: ["11111", "10000", "10000", "11110", "10000", "10000", "11111"],
+  D: ["11110", "10001", "10001", "10001", "10001", "10001", "11110"],
+  ".": ["000", "000", "000", "000", "000", "011", "011"],
 };
 
 function buildDotMatrixWord(word: string): number[][] {
@@ -81,7 +33,7 @@ function buildDotMatrixWord(word: string): number[][] {
   return grid;
 }
 
-const RAGED_MATRIX = buildDotMatrixWord("RAGED.");
+const RAGED_MATRIX: number[][] = buildDotMatrixWord("RAGED.");
 
 // Physics constants — React Bits 3D Lanyard feel
 // Anchored at y = -140 so the lanyard strap attaches directly to the top roof of the website
@@ -283,12 +235,14 @@ export default function LanyardBadge({
 }: LanyardBadgeProps) {
   const ribbonEdgeRef = useRef<SVGPathElement>(null);
   const ribbonMainRef = useRef<SVGPathElement>(null);
-  const ribbonSheenRef = useRef<SVGPathElement>(null);
-  const stampGroupRef = useRef<SVGGElement>(null);
+  const ribbonStitchRef = useRef<SVGPathElement>(null);
+  const ribbonDotsRef = useRef<SVGPathElement>(null);
+  const ribbonTrackRef = useRef<SVGPathElement>(null);
   const claspGroupRef = useRef<SVGGElement>(null);
   const cardPositionRef = useRef<HTMLDivElement>(null);
   const card3DInnerRef = useRef<HTMLDivElement>(null);
 
+  const [isMobile, setIsMobile] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
   // Front & Back photo choices from the 3 uploaded photos
@@ -333,21 +287,9 @@ export default function LanyardBadge({
     const d = buildRibbonPath(pts);
     ribbonEdgeRef.current?.setAttribute("d", d);
     ribbonMainRef.current?.setAttribute("d", d);
-    ribbonSheenRef.current?.setAttribute("d", d);
-
-    // Position the single dot-matrix "RAGED." stamp centered on the visible lanyard ribbon
-    if (stampGroupRef.current) {
-      const frac = sim.ay < 0 ? 0.78 : 0.46;
-      const idx = Math.min(pts.length - 2, Math.max(1, Math.floor(pts.length * frac)));
-      const pPrev = pts[Math.max(0, idx - 3)];
-      const pNext = pts[Math.min(pts.length - 1, idx + 3)];
-      const pMid = pts[idx];
-      const ang = (Math.atan2(pNext.y - pPrev.y, pNext.x - pPrev.x) * 180) / Math.PI;
-      stampGroupRef.current.setAttribute(
-        "transform",
-        `translate(${pMid.x.toFixed(1)} ${pMid.y.toFixed(1)}) rotate(${ang.toFixed(1)})`
-      );
-    }
+    ribbonStitchRef.current?.setAttribute("d", d);
+    ribbonDotsRef.current?.setAttribute("d", d);
+    ribbonTrackRef.current?.setAttribute("d", d);
 
     // Tangent angle at the bottom clip
     const refPt = pts[Math.max(0, pts.length - 5)];
@@ -432,8 +374,9 @@ export default function LanyardBadge({
   useEffect(() => {
     const updateAnchorForViewport = () => {
       const isDesktop = window.innerWidth >= 1024;
-      simRef.current.ay = isDesktop ? -140 : 0;
-      simRef.current.len = isDesktop ? 205 : 65;
+      setIsMobile(!isDesktop);
+      simRef.current.ay = isDesktop ? -140 : -22;
+      simRef.current.len = isDesktop ? 205 : 92;
       initRope(simRef.current);
       syncVisuals();
       startLoop();
@@ -518,9 +461,6 @@ export default function LanyardBadge({
 
   return (
     <div className="relative w-full max-w-[400px] h-[510px] mx-auto select-none flex flex-col items-center">
-      {/* Mobile/Tablet Hanger Bar (hidden on desktop where strap attaches to website roof) */}
-      <div className="lg:hidden w-24 h-1.5 rounded-full bg-base/20" />
-
       {/* SVG Single Flat Woven Lanyard Band + Clamp (React Bits style, anchored to website ceiling on lg+) */}
       <svg
         viewBox="0 0 400 340"
@@ -537,52 +477,136 @@ export default function LanyardBadge({
             <stop offset="45%" stopColor="#A1A1AA" />
             <stop offset="100%" stopColor="#52525B" />
           </linearGradient>
+          <radialGradient id="blackHoleVoid" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#000000" />
+            <stop offset="65%" stopColor="#020204" />
+            <stop offset="100%" stopColor="#121215" />
+          </radialGradient>
+          {/* Subtle natural shadow cast downwards from the background slit */}
+          <linearGradient id="slitShadow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#000000" stopOpacity="0.4" />
+            <stop offset="35%" stopColor="#000000" stopOpacity="0.18" />
+            <stop offset="70%" stopColor="#000000" stopOpacity="0.05" />
+            <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+          </linearGradient>
+          {/* Mobile-only slit clipping: hides any strap segment above the slit line (y < 0) */}
+          <clipPath id="mobileSlitClip">
+            <rect x="0" y={isMobile ? 0 : -300} width="400" height="700" />
+          </clipPath>
         </defs>
 
-        {/* Outer Ribbon Border (3D Edge Thickness) */}
+        {/* Hidden Path for Dynamic Curving Typography via textPath */}
         <path
-          ref={ribbonEdgeRef}
+          id="lanyardRibbonTrack"
+          ref={ribbonTrackRef}
           fill="none"
-          stroke="#09090B"
-          strokeWidth="30"
-          strokeLinecap="butt"
+          stroke="transparent"
         />
 
-        {/* Main Woven Black Lanyard Ribbon */}
-        <path
-          ref={ribbonMainRef}
-          fill="none"
-          stroke="url(#rbBandGrad)"
-          strokeWidth="27"
-          strokeLinecap="butt"
-        />
+        {/* Ribbon Tracks & Bands (Clipped at y=0 on mobile so strap emerges cleanly from slit) */}
+        <g clipPath="url(#mobileSlitClip)">
+          {/* Outer Ribbon Border (3D Edge Thickness) */}
+          <path
+            ref={ribbonEdgeRef}
+            fill="none"
+            stroke="#09090B"
+            strokeWidth="30"
+            strokeLinecap="butt"
+          />
 
-        {/* Subtle Woven Center Texture Line */}
-        <path
-          ref={ribbonSheenRef}
-          fill="none"
-          stroke="#FFFFFF"
-          strokeOpacity="0.06"
-          strokeWidth="21"
-          strokeDasharray="1 3"
-          strokeLinecap="butt"
-        />
+          {/* Main Woven Black Lanyard Ribbon */}
+          <path
+            ref={ribbonMainRef}
+            fill="none"
+            stroke="url(#rbBandGrad)"
+            strokeWidth="26"
+            strokeLinecap="butt"
+          />
 
-        {/* Single Dot-Matrix "RAGED." Stamp Along the Lanyard Ribbon */}
-        <g ref={stampGroupRef}>
-          {RAGED_MATRIX.map((row, rIdx) =>
-            row.map((val, cIdx) =>
-              val === 1 ? (
-                <circle
-                  key={`s0-${rIdx}-${cIdx}`}
-                  cx={(cIdx - RAGED_MATRIX[0].length / 2) * 2.35}
-                  cy={(rIdx - 3) * 2.25}
-                  r="0.95"
-                  fill="#F4F3EF"
-                />
-              ) : null
-            )
-          )}
+          {/* Woven Dual Edge Running Stitch Seams */}
+          <path
+            ref={ribbonStitchRef}
+            fill="none"
+            stroke="#FFFFFF"
+            strokeOpacity="0.14"
+            strokeWidth="22"
+            strokeDasharray="2 3"
+            strokeLinecap="butt"
+          />
+
+          {/* Physical Dot-Matrix Pattern Track (Round Dots Printed/Woven along the rope) */}
+          <path
+            ref={ribbonDotsRef}
+            fill="none"
+            stroke="#E4E4E7"
+            strokeOpacity="0.32"
+            strokeWidth="3"
+            strokeDasharray="1.5 5"
+            strokeLinecap="round"
+          />
+
+          {/* Curving Woven Typography via textPath, Flowing with Rope Physics (Mobile & Desktop) */}
+          <text
+            fill="#FAF9F5"
+            fillOpacity="0.95"
+            fontSize={isMobile ? "9.5" : "11"}
+            fontWeight="bold"
+            fontFamily="'Monocraft', monospace"
+            letterSpacing={isMobile ? "3px" : "4.5px"}
+            style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.85))" }}
+          >
+            <textPath
+              href="#lanyardRibbonTrack"
+              startOffset={isMobile ? "50%" : "82%"}
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
+              ✦ RAGED. ✦
+            </textPath>
+          </text>
+        </g>
+
+        {/* Mobile-Only Background Slit ("Selipan di background dengan sedikit shadow") */}
+        <g className="lg:hidden pointer-events-none">
+          {/* Inner dark crevice where strap slips into */}
+          <line
+            x1={ANCHOR_X - 19}
+            y1="0"
+            x2={ANCHOR_X + 19}
+            y2="0"
+            stroke="#121214"
+            strokeOpacity="0.8"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+          {/* Subtle paper slit highlight seam immediately above the cut */}
+          <line
+            x1={ANCHOR_X - 18}
+            y1="-0.8"
+            x2={ANCHOR_X + 18}
+            y2="-0.8"
+            stroke="currentColor"
+            strokeOpacity="0.12"
+            strokeWidth="0.8"
+            strokeLinecap="round"
+          />
+          {/* Soft natural drop shadow cast downwards directly over the tucked strap */}
+          <rect
+            x={ANCHOR_X - 18}
+            y="0"
+            width="36"
+            height="10"
+            fill="url(#slitShadow)"
+          />
+          {/* Subtle contact ambient occlusion right at the opening */}
+          <ellipse
+            cx={ANCHOR_X}
+            cy="1.2"
+            rx="16"
+            ry="2.2"
+            fill="#000000"
+            fillOpacity="0.25"
+          />
         </g>
 
         {/* React Bits Style Black Clamp + Metallic Swivel Hook */}

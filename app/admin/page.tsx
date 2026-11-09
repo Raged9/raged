@@ -20,8 +20,10 @@ import {
   Image as ImageIcon,
   FileText,
   UserCheck,
+  Award,
 } from 'lucide-react';
 import { api, ProjectItem, OffScreenPhotoItem, ProfileSettings, removeToken } from '@/lib/api-client';
+import type { HanglineItem } from '@/data/hangline-items';
 
 /**
  * Processes an uploaded image file:
@@ -89,9 +91,49 @@ async function processImageFile(file: File, maxDimension = 1200, quality = 0.84)
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'projects' | 'photos' | 'profile'>('projects');
+  const [activeTab, setActiveTab] = useState<'projects' | 'photos' | 'profile' | 'hangline'>('projects');
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [photos, setPhotos] = useState<OffScreenPhotoItem[]>([]);
+  const [hanglineItems, setHanglineItems] = useState<HanglineItem[]>([]);
+  const [isHanglineModalOpen, setIsHanglineModalOpen] = useState(false);
+  const [editingHangline, setEditingHangline] = useState<HanglineItem | null>(null);
+  const [isUploadingHanglineImage, setIsUploadingHanglineImage] = useState(false);
+  const [isSavingHangline, setIsSavingHangline] = useState(false);
+  const [hanglineForm, setHanglineForm] = useState<{
+    title: string;
+    subtitle: string;
+    specs: string;
+    category: 'milestone' | 'certificate' | 'competition' | 'event';
+    description: string;
+    image: string;
+    badgeText: string;
+    issuer: string;
+    order: number;
+    useCertificateOverlay: boolean;
+    overlayType: 'certificate' | 'award' | 'event';
+    issuerLogoText: string;
+    credentialId: string;
+    date: string;
+    accentColor: string;
+    recipient: string;
+  }>({
+    title: '',
+    subtitle: 'WEST JAKARTA · 2025',
+    specs: 'INFORMATICS · SOFTWARE ENGINEERING',
+    category: 'certificate',
+    description: '',
+    image: '/edgar-warm.jpg',
+    badgeText: 'CERTIFIED',
+    issuer: 'Christopher Edgar',
+    order: 1,
+    useCertificateOverlay: false,
+    overlayType: 'certificate',
+    issuerLogoText: 'VERIFIED CERTIFICATION',
+    credentialId: 'CERT-2025',
+    date: '2025',
+    accentColor: '#10B981',
+    recipient: 'Christopher Edgar',
+  });
   const [profile, setProfile] = useState<ProfileSettings>({
     fullName: 'Christopher Edgar',
     nickname: 'Raged',
@@ -99,6 +141,7 @@ export default function AdminDashboardPage() {
     bio: 'An Informatics student passionate about turning complex problems into clean, fast, and tactile digital products — from full-stack management systems and cross-platform Flutter mobile apps to NLP & AI explorations.',
     location: 'Kebon Jeruk, West Jakarta, Indonesia',
     university: 'B.Sc. in Informatics (S.Kom.)',
+    gpa: '3.78/4',
     focus: 'Web · Mobile · AI/NLP',
     email: 'edgar.edmanata@gmail.com',
     availability: 'Available for internships, freelance & collaborations',
@@ -158,14 +201,16 @@ export default function AdminDashboardPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [projData, photoData, profileData, healthData] = await Promise.all([
+      const [projData, photoData, profileData, hanglineData, healthData] = await Promise.all([
         api.getProjects().catch(() => []),
         api.getPhotos().catch(() => []),
         api.getProfile().catch(() => null),
+        api.getHanglineItems().catch(() => []),
         api.checkHealth().catch(() => ({ status: 'ok', service: '', storage: 'unknown' })),
       ]);
       setProjects(projData);
       setPhotos(photoData);
+      setHanglineItems(hanglineData);
       if (profileData) {
         setProfile((prev) => ({ ...prev, ...profileData }));
       }
@@ -176,6 +221,143 @@ export default function AdminDashboardPage() {
       console.warn('Failed to fetch data:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleOpenAddHangline = () => {
+    setEditingHangline(null);
+    setHanglineForm({
+      title: '',
+      subtitle: 'WEST JAKARTA · 2025',
+      specs: 'INFORMATICS · SOFTWARE ENGINEERING',
+      category: 'certificate',
+      description: '',
+      image: '/edgar-warm.jpg',
+      badgeText: 'CERTIFIED',
+      issuer: 'Christopher Edgar',
+      order: hanglineItems.length + 1,
+      useCertificateOverlay: false,
+      overlayType: 'certificate',
+      issuerLogoText: 'VERIFIED CERTIFICATION',
+      credentialId: `CERT-${new Date().getFullYear()}`,
+      date: String(new Date().getFullYear()),
+      accentColor: '#10B981',
+      recipient: 'Christopher Edgar',
+    });
+    setIsHanglineModalOpen(true);
+  };
+
+  const handleOpenEditHangline = (item: HanglineItem) => {
+    setEditingHangline(item);
+    const cert = item.certificateOverlay;
+    setHanglineForm({
+      title: item.title || '',
+      subtitle: item.subtitle || '',
+      specs: item.specs || '',
+      category: item.category || 'certificate',
+      description: item.description || '',
+      image: item.image || '/edgar-warm.jpg',
+      badgeText: item.badgeText || '',
+      issuer: item.issuer || '',
+      order: item.order ?? (parseInt(item.number, 10) || 1),
+      useCertificateOverlay: Boolean(cert),
+      overlayType: cert?.type || 'certificate',
+      issuerLogoText: cert?.issuerLogoText || 'VERIFIED CERTIFICATION',
+      credentialId: cert?.credentialId || 'CERT-2025',
+      date: cert?.date || '2025',
+      accentColor: cert?.accentColor || '#10B981',
+      recipient: cert?.recipient || 'Christopher Edgar',
+    });
+    setIsHanglineModalOpen(true);
+  };
+
+  const handleHanglineImageUpload = async (file: File | undefined) => {
+    if (!file) return;
+    setIsUploadingHanglineImage(true);
+    try {
+      const dataUrl = await processImageFile(file, 1100, 0.85);
+      setHanglineForm((prev) => ({ ...prev, image: dataUrl }));
+      setStatusMessage({
+        type: 'success',
+        text: `Gambar "${file.name}" berhasil dimuat ke form Hangline!`,
+      });
+      setTimeout(() => setStatusMessage(null), 3500);
+    } catch (err: any) {
+      setStatusMessage({ type: 'error', text: err.message || 'Gagal memproses gambar' });
+    } finally {
+      setIsUploadingHanglineImage(false);
+    }
+  };
+
+  const handleSaveHanglineItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingHangline(true);
+    try {
+      const payload: Partial<HanglineItem> = {
+        title: hanglineForm.title,
+        subtitle: hanglineForm.subtitle,
+        specs: hanglineForm.specs,
+        category: hanglineForm.category,
+        description: hanglineForm.description,
+        image: hanglineForm.image,
+        badgeText: hanglineForm.badgeText,
+        issuer: hanglineForm.issuer,
+        order: Number(hanglineForm.order) || 1,
+        certificateOverlay: hanglineForm.useCertificateOverlay
+          ? {
+              type: hanglineForm.overlayType,
+              issuerLogoText: hanglineForm.issuerLogoText,
+              credentialId: hanglineForm.credentialId,
+              date: hanglineForm.date,
+              accentColor: hanglineForm.accentColor,
+              recipient: hanglineForm.recipient,
+            }
+          : null,
+      };
+
+      if (editingHangline) {
+        await api.updateHanglineItem(editingHangline.id, payload);
+        setStatusMessage({
+          type: 'success',
+          text: `Hangline print "${hanglineForm.title}" berhasil diperbarui!`,
+        });
+      } else {
+        await api.createHanglineItem(payload);
+        setStatusMessage({
+          type: 'success',
+          text: `Hangline print "${hanglineForm.title}" berhasil ditambahkan!`,
+        });
+      }
+      const refreshed = await api.getHanglineItems();
+      setHanglineItems(refreshed);
+      setIsHanglineModalOpen(false);
+      setTimeout(() => setStatusMessage(null), 3500);
+    } catch (err: any) {
+      setStatusMessage({
+        type: 'error',
+        text: err.message || 'Gagal menyimpan item Hangline',
+      });
+    } finally {
+      setIsSavingHangline(false);
+    }
+  };
+
+  const handleDeleteHanglineItem = async (item: HanglineItem) => {
+    if (!window.confirm(`Hapus print "${item.title}" dari Hangline?`)) return;
+    try {
+      await api.deleteHanglineItem(item.id);
+      const refreshed = await api.getHanglineItems();
+      setHanglineItems(refreshed);
+      setStatusMessage({
+        type: 'success',
+        text: `Print "${item.title}" berhasil dihapus.`,
+      });
+      setTimeout(() => setStatusMessage(null), 3500);
+    } catch (err: any) {
+      setStatusMessage({
+        type: 'error',
+        text: err.message || 'Gagal menghapus item Hangline',
+      });
     }
   };
 
@@ -564,6 +746,17 @@ export default function AdminDashboardPage() {
             <FileText className="w-4 h-4" />
             Profile &amp; CV (/contact)
           </button>
+          <button
+            onClick={() => setActiveTab('hangline')}
+            className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
+              activeTab === 'hangline'
+                ? 'bg-[#3E4F36] text-white border border-[#A3B899]/40 shadow-md'
+                : 'bg-neutral-900/60 text-neutral-400 hover:text-white border border-transparent'
+            }`}
+          >
+            <Award className="w-4 h-4" />
+            Hangline Archive ({hanglineItems.length})
+          </button>
         </div>
 
         {activeTab === 'projects' ? (
@@ -861,7 +1054,7 @@ export default function AdminDashboardPage() {
               })}
             </div>
           </div>
-        ) : (
+        ) : activeTab === 'profile' ? (
           /* Profile & CV (/contact) CMS Tab */
           <form onSubmit={handleSaveProfile} className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
@@ -1064,6 +1257,20 @@ export default function AdminDashboardPage() {
                   </div>
                   <div>
                     <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1">
+                      IPK / GPA
+                    </label>
+                    <input
+                      type="text"
+                      value={profile.gpa || ''}
+                      placeholder="contoh: 3.78/4"
+                      onChange={(e) =>
+                        setProfile((prev) => ({ ...prev, gpa: e.target.value }))
+                      }
+                      className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-neutral-400 block mb-1">
                       Fokus Keahlian
                     </label>
                     <input
@@ -1108,6 +1315,103 @@ export default function AdminDashboardPage() {
               </div>
             </div>
           </form>
+        ) : (
+          /* Hangline Archive (/contact) CMS Tab */
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
+              <div>
+                <h1 className="text-3xl font-black tracking-tight text-white uppercase flex items-center gap-2.5">
+                  <Award className="w-7 h-7 text-[#A3B899]" />
+                  Hangline Archive Manager (/contact)
+                </h1>
+                <p className="text-neutral-400 text-sm mt-1">
+                  Kelola kartu sertifikat, lomba, kepanitiaan, dan milestone yang digantung pada fitur Hangline di halaman /contact.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleOpenAddHangline}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#3E4F36] hover:bg-[#2E3B27] text-white font-bold text-sm transition-colors shadow-lg self-start sm:self-auto border border-[#A3B899]/30 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" /> Add Hangline Print
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {hanglineItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-[#181818] border border-neutral-800 rounded-xl overflow-hidden shadow-lg flex flex-col justify-between group hover:border-neutral-700 transition-colors"
+                >
+                  <div>
+                    <div className="relative h-44 w-full bg-neutral-900 overflow-hidden">
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className={`w-full h-full object-cover ${
+                            item.certificateOverlay ? 'brightness-50' : ''
+                          }`}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-neutral-600 font-bold">
+                          No Image
+                        </div>
+                      )}
+
+                      <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded bg-black/75 backdrop-blur-md text-[11px] font-mono font-bold text-white border border-white/10">
+                        #{item.number} · {item.category.toUpperCase()}
+                      </span>
+
+                      {item.certificateOverlay && (
+                        <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded bg-[#3E4F36]/90 backdrop-blur-md text-[10px] font-mono font-bold text-white border border-[#A3B899]/40">
+                          Cert Overlay
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="p-5 space-y-2">
+                      <h3 className="text-lg font-bold text-white leading-snug">
+                        {item.title}
+                      </h3>
+                      <p className="text-[11px] font-mono uppercase tracking-wider text-[#A3B899]">
+                        {item.subtitle}
+                      </p>
+                      <p className="text-[10px] font-mono uppercase tracking-wider text-neutral-500 truncate">
+                        {item.specs}
+                      </p>
+                      <p className="text-xs text-neutral-400 line-clamp-2 pt-1">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="px-5 py-3.5 bg-neutral-900/60 border-t border-neutral-800 flex items-center justify-between">
+                    <span className="text-[11px] font-mono text-neutral-400 truncate max-w-[140px]">
+                      {item.issuer || item.badgeText}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditHangline(item)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" /> Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteHanglineItem(item)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-950/60 hover:bg-red-900/80 text-red-300 border border-red-800/40 text-xs font-semibold transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </main>
 
@@ -1379,6 +1683,288 @@ export default function AdminDashboardPage() {
                 >
                   <Save className="w-4 h-4" />
                   {isSubmitting ? 'Saving Project...' : 'Save Project'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create / Edit Hangline Print Modal */}
+      {isHanglineModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="relative w-full max-w-2xl bg-[#181818] border border-neutral-800 rounded-2xl shadow-2xl p-6 sm:p-8 text-white max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-4 mb-6">
+              <h2 className="text-xl font-bold uppercase tracking-tight text-white flex items-center gap-2">
+                <Award className="w-5 h-5 text-[#A3B899]" />
+                {editingHangline ? 'Edit Hangline Print' : 'Add New Hangline Print'}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setIsHanglineModalOpen(false)}
+                className="p-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveHanglineItem} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs uppercase font-bold text-neutral-400 mb-1">
+                    Print Title *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={hanglineForm.title}
+                    onChange={(e) => setHanglineForm({ ...hanglineForm, title: e.target.value })}
+                    placeholder="e.g. B.Sc. in Informatics (S.Kom.)"
+                    className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase font-bold text-neutral-400 mb-1">
+                    Category
+                  </label>
+                  <select
+                    value={hanglineForm.category}
+                    onChange={(e) =>
+                      setHanglineForm({
+                        ...hanglineForm,
+                        category: e.target.value as HanglineItem['category'],
+                      })
+                    }
+                    className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                  >
+                    <option value="milestone">Milestone</option>
+                    <option value="certificate">Certificate</option>
+                    <option value="competition">Competition</option>
+                    <option value="event">Event</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs uppercase font-bold text-neutral-400 mb-1">
+                    Subtitle (Location / Year)
+                  </label>
+                  <input
+                    type="text"
+                    value={hanglineForm.subtitle}
+                    onChange={(e) => setHanglineForm({ ...hanglineForm, subtitle: e.target.value })}
+                    placeholder="e.g. WEST JAKARTA · 2025"
+                    className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase font-bold text-neutral-400 mb-1">
+                    Specs / Technical Metadata
+                  </label>
+                  <input
+                    type="text"
+                    value={hanglineForm.specs}
+                    onChange={(e) => setHanglineForm({ ...hanglineForm, specs: e.target.value })}
+                    placeholder="e.g. NEXT.JS · TYPESCRIPT · POSTGRESQL"
+                    className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase font-bold text-neutral-400 mb-1">
+                  Description / Story
+                </label>
+                <textarea
+                  rows={3}
+                  value={hanglineForm.description}
+                  onChange={(e) =>
+                    setHanglineForm({ ...hanglineForm, description: e.target.value })
+                  }
+                  placeholder="Describe this certificate, competition, or milestone..."
+                  className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                />
+              </div>
+
+              {/* Image Upload & URL */}
+              <div className="p-4 rounded-xl bg-neutral-900/70 border border-neutral-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs uppercase font-bold text-neutral-300">
+                    Print Image / Certificate Photo
+                  </label>
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#3E4F36] hover:bg-[#2E3B27] text-white text-xs font-bold cursor-pointer transition-colors">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>
+                      {isUploadingHanglineImage ? 'Processing...' : 'Upload Gambar'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => handleHanglineImageUpload(e.target.files?.[0])}
+                    />
+                  </label>
+                </div>
+
+                <input
+                  type="text"
+                  value={hanglineForm.image}
+                  onChange={(e) => setHanglineForm({ ...hanglineForm, image: e.target.value })}
+                  placeholder="/edgar-warm.jpg atau URL gambar"
+                  className="w-full px-3.5 py-2 rounded-lg bg-neutral-950 border border-neutral-700 text-white text-xs font-mono focus:outline-none focus:border-[#A3B899]"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs uppercase font-bold text-neutral-400 mb-1">
+                    Badge Text
+                  </label>
+                  <input
+                    type="text"
+                    value={hanglineForm.badgeText}
+                    onChange={(e) =>
+                      setHanglineForm({ ...hanglineForm, badgeText: e.target.value })
+                    }
+                    placeholder="e.g. DEGREE MILESTONE"
+                    className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase font-bold text-neutral-400 mb-1">
+                    Issuer / Organizer
+                  </label>
+                  <input
+                    type="text"
+                    value={hanglineForm.issuer}
+                    onChange={(e) => setHanglineForm({ ...hanglineForm, issuer: e.target.value })}
+                    placeholder="e.g. Informatics Engineering"
+                    className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase font-bold text-neutral-400 mb-1">
+                    Order (#01, #02...)
+                  </label>
+                  <input
+                    type="number"
+                    value={hanglineForm.order}
+                    onChange={(e) =>
+                      setHanglineForm({ ...hanglineForm, order: Number(e.target.value) })
+                    }
+                    className="w-full px-3.5 py-2 rounded-lg bg-neutral-900 border border-neutral-700 text-white text-sm focus:outline-none focus:border-[#A3B899]"
+                  />
+                </div>
+              </div>
+
+              {/* Optional Archival Certificate Overlay Toggle */}
+              <div className="p-4 rounded-xl bg-neutral-900/70 border border-neutral-800 space-y-3">
+                <label className="flex items-center gap-2.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={hanglineForm.useCertificateOverlay}
+                    onChange={(e) =>
+                      setHanglineForm({
+                        ...hanglineForm,
+                        useCertificateOverlay: e.target.checked,
+                      })
+                    }
+                    className="rounded border-neutral-600"
+                  />
+                  <span className="text-xs font-bold uppercase tracking-wider text-neutral-200">
+                    Tampilkan Bingkai Sertifikat Digital di Atas Gambar (Certificate Overlay)
+                  </span>
+                </label>
+
+                {hanglineForm.useCertificateOverlay && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div>
+                      <label className="block text-[11px] font-mono text-neutral-400 mb-1">
+                        Issuer Header Text
+                      </label>
+                      <input
+                        type="text"
+                        value={hanglineForm.issuerLogoText}
+                        onChange={(e) =>
+                          setHanglineForm({ ...hanglineForm, issuerLogoText: e.target.value })
+                        }
+                        className="w-full px-3 py-1.5 rounded bg-neutral-950 border border-neutral-700 text-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-mono text-neutral-400 mb-1">
+                        Credential ID
+                      </label>
+                      <input
+                        type="text"
+                        value={hanglineForm.credentialId}
+                        onChange={(e) =>
+                          setHanglineForm({ ...hanglineForm, credentialId: e.target.value })
+                        }
+                        className="w-full px-3 py-1.5 rounded bg-neutral-950 border border-neutral-700 text-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-mono text-neutral-400 mb-1">
+                        Recipient Name
+                      </label>
+                      <input
+                        type="text"
+                        value={hanglineForm.recipient}
+                        onChange={(e) =>
+                          setHanglineForm({ ...hanglineForm, recipient: e.target.value })
+                        }
+                        className="w-full px-3 py-1.5 rounded bg-neutral-950 border border-neutral-700 text-white text-xs"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[11px] font-mono text-neutral-400 mb-1">
+                          Year / Date
+                        </label>
+                        <input
+                          type="text"
+                          value={hanglineForm.date}
+                          onChange={(e) =>
+                            setHanglineForm({ ...hanglineForm, date: e.target.value })
+                          }
+                          className="w-full px-3 py-1.5 rounded bg-neutral-950 border border-neutral-700 text-white text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-mono text-neutral-400 mb-1">
+                          Accent Color
+                        </label>
+                        <input
+                          type="color"
+                          value={hanglineForm.accentColor}
+                          onChange={(e) =>
+                            setHanglineForm({ ...hanglineForm, accentColor: e.target.value })
+                          }
+                          className="w-full h-8 rounded bg-neutral-950 border border-neutral-700 cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setIsHanglineModalOpen(false)}
+                  className="px-4 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-bold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingHangline || isUploadingHanglineImage}
+                  className="flex items-center gap-2 px-6 py-2 rounded-lg bg-[#3E4F36] hover:bg-[#2E3B27] text-white text-xs font-bold transition-colors shadow-lg disabled:opacity-50 border border-[#A3B899]/30 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  {isSavingHangline ? 'Saving...' : 'Save Hangline Print'}
                 </button>
               </div>
             </form>

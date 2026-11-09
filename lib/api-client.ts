@@ -1,4 +1,6 @@
 // API Client for Porto-Design Frontend connecting to standalone Express backend
+import type { HanglineItem } from "@/data/hangline-items";
+
 const rawBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 const API_BASE_URL = rawBase.replace(/\/+$/, "");
 
@@ -124,6 +126,7 @@ export interface ProfileSettings {
   bio: string;
   location: string;
   university: string;
+  gpa?: string;
   focus: string;
   email: string;
   availability: string;
@@ -199,5 +202,22 @@ export const api = {
     apiFetch<ProfileSettings>("/api/profile", {
       method: "PUT",
       body: JSON.stringify(data),
+    }),
+
+  // Hangline Archive (/contact)
+  getHanglineItems: () => apiFetch<HanglineItem[]>("/api/hangline"),
+  createHanglineItem: (data: Partial<HanglineItem>) =>
+    apiFetch<HanglineItem>("/api/hangline", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  updateHanglineItem: (id: string, data: Partial<HanglineItem>) =>
+    apiFetch<HanglineItem>(`/api/hangline/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  deleteHanglineItem: (id: string) =>
+    apiFetch<{ success: boolean }>(`/api/hangline/${id}`, {
+      method: "DELETE",
     }),
 };
