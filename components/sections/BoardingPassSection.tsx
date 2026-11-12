@@ -9,6 +9,7 @@ import {
 } from "@/components/boarding-pass";
 import { motion, useReducedMotion } from "motion/react";
 import { easeOut, viewportOnce } from "@/lib/motion";
+import { RotateCcw } from "lucide-react";
 
 export default function BoardingPassSection() {
   const [progress, setProgress] = useState(0);
@@ -115,21 +116,21 @@ export default function BoardingPassSection() {
         viewport={viewportOnce}
         transition={{ duration: 0.6, ease: easeOut }}
       >
-        <span className="text-xs uppercase tracking-widest text-base/50 font-mono font-medium mb-2 block">
+        <span className="text-xs sm:text-sm uppercase tracking-[0.22em] text-base/60 font-mono font-bold mb-3 block">
           Flight Clearance • IT-1030
         </span>
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-base">
+        <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-base leading-tight mb-4">
           ready for departure<span className="text-base/30">?</span>
         </h2>
-        <p className="mt-3 text-sm sm:text-base text-base/60 leading-relaxed font-normal">
+        <p className="text-base sm:text-lg text-base/75 leading-relaxed font-normal max-w-lg mx-auto">
           tear your boarding stub (drag down or press Enter) to take off through the clouds
           into the vintage typewriter terminal.
         </p>
       </motion.div>
 
       {/* Responsive Ticket Container */}
-      <div className="w-full flex justify-center items-center py-4 overflow-x-visible">
-        <div className="w-[672px] h-[336px] origin-center transform scale-[0.50] xs:scale-[0.56] sm:scale-[0.76] md:scale-95 lg:scale-100 transition-transform duration-200">
+      <div className="w-full flex flex-col justify-center items-center py-4 overflow-x-visible">
+        <div className="w-[672px] h-[336px] origin-center transform scale-[0.56] xs:scale-[0.64] sm:scale-[0.80] md:scale-95 lg:scale-100 transition-transform duration-200">
           <BoardingPass
             progress={progress}
             detach={detach}
@@ -139,6 +140,28 @@ export default function BoardingPassSection() {
             onReattach={handleReattach}
           />
         </div>
+
+        {/* Mobile-Friendly Prominent Reattach CTA (shows when ticket stub is detached) */}
+        {detach >= 1 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6 flex flex-col items-center gap-2 md:hidden z-20"
+          >
+            <button
+              type="button"
+              onClick={handleReattach}
+              className="px-7 py-3.5 rounded-full bg-base text-bg text-sm sm:text-base font-mono font-bold uppercase tracking-wider flex items-center gap-2.5 shadow-xl shadow-black/25 active:scale-95 transition cursor-pointer"
+              aria-label="Reattach ticket stub"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Reattach Ticket</span>
+            </button>
+            <span className="text-xs font-mono text-base/60 font-medium">
+              Ticket Detached • Tap to reassemble
+            </span>
+          </motion.div>
+        )}
       </div>
     </section>
   );

@@ -435,22 +435,44 @@ export default function HanglineGallery({
   // Reset target position when category changes
   useEffect(() => {
     targetPosRef.current = 0;
+    currentPosRef.current = 0;
+    setRenderPos(0);
     setActiveIndex(0);
     setHoveredIndex(null);
     setHoverPointer({ idx: null, rx: 0, ry: 0 });
     setSelectedItem(null);
   }, [activeCategory]);
 
-  // Smooth spring physics loop
+  // Smooth spring physics loop with dynamic viewport-aware scroll mapping
+  // Dynamically adapts based on the number of certificates/items:
+  // Balances noticeable, satisfying slide per certificate (~75px) while keeping cards centered!
   useEffect(() => {
     let rafId = 0;
     const tick = () => {
-      const target = targetPosRef.current;
-      const current = currentPosRef.current;
-      const diff = target - current;
+      const N = filteredItems.length;
 
-      const step = diff * 0.14;
-      const next = Math.abs(diff) < 0.0008 ? target : current + step;
+      // When reaching the last card (N - 1), it shouldn't be thrown down to rel = 0 (bottom-left corner),
+      // nor should it freeze. Instead, it settles at a natural centered position (rel = 1.0 - 1.4)
+      // allowing a healthy, satisfying ~0.55 - 0.70 slide step per certificate!
+      const lastRelTarget =
+        N <= 1
+          ? 0
+          : viewport === "mobile"
+          ? Math.min(1.2, Math.max(0.6, 0.35 * (N - 1)))
+          : Math.min(1.8, Math.max(0.8, 0.45 * (N - 1)));
+
+      const maxScroll = Math.max(0, (N - 1) - lastRelTarget);
+
+      // Map targetPosRef (0 .. N - 1) to target scroll offset (0 .. maxScroll)
+      const targetIndex = targetPosRef.current;
+      const targetScroll =
+        N <= 1 ? 0 : (targetIndex / Math.max(1, N - 1)) * maxScroll;
+
+      const current = currentPosRef.current;
+      const diff = targetScroll - current;
+
+      const step = diff * 0.15;
+      const next = Math.abs(diff) < 0.0008 ? targetScroll : current + step;
       const instVel = next - current;
 
       currentPosRef.current = next;
@@ -460,7 +482,7 @@ export default function HanglineGallery({
       setActiveIndex(
         Math.max(
           0,
-          Math.min(filteredItems.length - 1, Math.round(targetPosRef.current))
+          Math.min(filteredItems.length - 1, Math.round(targetIndex))
         )
       );
 
@@ -477,13 +499,15 @@ export default function HanglineGallery({
 
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [filteredItems.length, reduceMotion]);
+  }, [filteredItems.length, viewport, reduceMotion]);
 
   const setClampedTarget = useCallback(
     (val: number, snap = false) => {
       const maxIdx = Math.max(0, filteredItems.length - 1);
-      const clamped = Math.max(0, Math.min(maxIdx, val));
-      targetPosRef.current = snap ? Math.round(clamped) : clamped;
+      const clamped = snap
+        ? Math.max(0, Math.min(maxIdx, Math.round(val)))
+        : Math.max(-0.35, Math.min(maxIdx + 0.35, val));
+      targetPosRef.current = clamped;
     },
     [filteredItems.length]
   );
@@ -525,38 +549,81 @@ export default function HanglineGallery({
     setClampedTarget(targetPosRef.current, true);
   };
 
-  // Dedicated wheel handler:
-  // When cursor is hovered over the Hangline stage, wheel events drive the cards along the wire.
-  // When reaching the edges (start or end), it lets the page scroll naturally so the user is not trapped.
+  // Dedicated wheel handler with Intentional Boundary Escape Delay (1.2s):
+  // - While hovering over Hangline, wheel strictly drives Hangline cards.
+  // - When reaching start or end boundaries, holds scroll for 1.2s absorbing momentum.
+  // - Only after 1.2s of deliberate continuous scrolling at the edge does it release to page scroll,
+  //   preventing accidental page jumps while avoiding scroll traps!
   useEffect(() => {
     const el = stageRef.current;
     if (!el) return;
 
     let wheelSnapTimeout: ReturnType<typeof setTimeout> | null = null;
+    let boundaryHit: { dir: "start" | "end"; timestamp: number } | null = null;
+    let boundaryResetTimer: ReturnType<typeof setTimeout> | null = null;
 
     const onWheel = (e: WheelEvent) => {
       if (selectedItem) return;
 
-      const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-      if (Math.abs(delta) < 1) return;
+      const rawDelta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+      if (Math.abs(rawDelta) < 1) return;
 
       const maxIdx = Math.max(0, filteredItems.length - 1);
       if (maxIdx === 0) return;
 
-      const atStart = targetPosRef.current <= 0.02 && delta < 0;
-      const atEnd = targetPosRef.current >= maxIdx - 0.02 && delta > 0;
+      const atStart = targetPosRef.current <= 0.02 && rawDelta < 0;
+      const atEnd = targetPosRef.current >= maxIdx - 0.02 && rawDelta > 0;
 
-      // Allow natural page scroll when at boundaries
+      // If user reverses scroll direction back into cards, immediately reset boundary lock
+      if (
+        (boundaryHit?.dir === "start" && rawDelta > 0) ||
+        (boundaryHit?.dir === "end" && rawDelta < 0)
+      ) {
+        boundaryHit = null;
+      }
+
+      // Reset timer if user stops scrolling for > 450ms
+      if (boundaryResetTimer) clearTimeout(boundaryResetTimer);
+      boundaryResetTimer = setTimeout(() => {
+        boundaryHit = null;
+      }, 450);
+
+      // Boundary Hold with 1.2s Intentional Delay:
+      // While at the edge, lock the page for 1.2s so trackpad momentum / fast wheel
+      // NEVER accidentally yanks the page away.
       if (atStart || atEnd) {
+        const currentDir = atStart ? "start" : "end";
+        const now = performance.now();
+
+        if (!boundaryHit || boundaryHit.dir !== currentDir) {
+          // First tick hitting the boundary: start the 1.2s resistance timer
+          boundaryHit = { dir: currentDir, timestamp: now };
+          e.preventDefault();
+          return;
+        }
+
+        const elapsed = now - boundaryHit.timestamp;
+        const DELAY_MS = 1200; // 1.2s intentional delay
+
+        if (elapsed < DELAY_MS) {
+          // Hold the lock during the delay window: page stays steady!
+          e.preventDefault();
+          return;
+        }
+
+        // Delay elapsed! User has intentionally continued scrolling at the boundary:
+        // Allow natural page scroll to release the user gracefully without trap!
         return;
       }
 
-      // Intercept wheel scroll to drive Hangline
+      // Inside normal card range: Hangline captures wheel exclusively
       e.preventDefault();
+      boundaryHit = null;
+
       const sensitivity = 0.0032;
       const nextTarget = Math.max(
         0,
-        Math.min(maxIdx, targetPosRef.current + delta * sensitivity)
+        Math.min(maxIdx, targetPosRef.current + rawDelta * sensitivity)
       );
       targetPosRef.current = nextTarget;
 
@@ -570,6 +637,7 @@ export default function HanglineGallery({
     return () => {
       el.removeEventListener("wheel", onWheel);
       if (wheelSnapTimeout) clearTimeout(wheelSnapTimeout);
+      if (boundaryResetTimer) clearTimeout(boundaryResetTimer);
     };
   }, [selectedItem, filteredItems.length]);
 
@@ -601,20 +669,41 @@ export default function HanglineGallery({
   const spacingMultiplier =
     spacingMode === "compact" ? 0.85 : spacingMode === "wide" ? 1.18 : 1;
 
-  // Step vector (direction of clothesline line in 2D space)
-  // On mobile: gentle natural slope (~32 deg), cards naturally flow beyond right edge
-  const stepX =
-    (viewport === "mobile" ? 64 : viewport === "tablet" ? 92 : 124) *
-    spacingMultiplier;
-  const stepY =
-    (viewport === "mobile" ? 40 : viewport === "tablet" ? 58 : 74) *
-    spacingMultiplier;
+  const itemCount = filteredItems.length;
 
-  // Position of foreground card (rel = 0).
+  // Adapt spacing based on the number of certificates/items:
+  // When there are fewer items (e.g. 4), widen spacing so they span across the stage majestically!
+  const countFactor =
+    itemCount <= 3 ? 1.35 : itemCount <= 4 ? 1.25 : itemCount <= 5 ? 1.12 : 1.0;
+
+  // Step vector (direction of clothesline line in 2D space)
+  const stepX =
+    (viewport === "mobile" ? 68 : viewport === "tablet" ? 98 : 134) *
+    spacingMultiplier *
+    countFactor;
+  const stepY =
+    (viewport === "mobile" ? 42 : viewport === "tablet" ? 60 : 76) *
+    spacingMultiplier *
+    (countFactor > 1 ? 1.1 : 1.0);
+
+  // Dynamically center baseLeft based on total span width when items fit inside stage
   const baseLeft =
-    viewport === "mobile" ? 18 : viewport === "tablet" ? 140 : 220;
+    viewport === "mobile"
+      ? itemCount <= 3
+        ? 20
+        : -20
+      : viewport === "tablet"
+      ? itemCount <= 4
+        ? 110
+        : 85
+      : itemCount <= 3
+      ? 200
+      : itemCount <= 4
+      ? 160
+      : 140;
+
   const baseTop =
-    viewport === "mobile" ? 450 : viewport === "tablet" ? 430 : 450;
+    viewport === "mobile" ? 425 : viewport === "tablet" ? 420 : 450;
 
   // Real Hangline wide print dimensions (3:2 / 16:10 format)
   // Slightly zoomed on mobile as user requested ("lebih zoom jadi yang terlihat hanya 3-4 gambar")
@@ -634,12 +723,16 @@ export default function HanglineGallery({
   const rotZDeg = 3.0;
 
   // Continuous sagging clothesline wire path
+  // Creates natural catenary curves that sag organically between each wooden clothespin
   const buildClotheslinePath = () => {
-    const pinPoints: { x: number; y: number }[] = [];
+    const pinPoints: { x: number; y: number; scale: number; isAnchor?: boolean }[] = [];
+
     // Start offscreen bottom-left
     pinPoints.push({
       x: baseLeft + 26 - stepX * 2.2,
-      y: baseTop + stepY * 2.2,
+      y: baseTop + stepY * 2.2 + (viewport === "mobile" ? 14 : 20),
+      scale: 1.15,
+      isAnchor: true,
     });
 
     for (let i = 0; i < filteredItems.length; i++) {
@@ -649,14 +742,19 @@ export default function HanglineGallery({
       // Wire passes right through the middle waist of the wooden clothespin (cy = 38)
       const x = baseLeft + rel * stepX + 26 * scale;
       const y = baseTop - rel * stepY + 0.5 * scale;
-      pinPoints.push({ x, y });
+      pinPoints.push({ x, y, scale });
     }
 
     // End offscreen top-right
-    const lastRel = Math.max(6, filteredItems.length - renderPos + 1.8);
+    const lastRel = Math.max(
+      filteredItems.length <= 4 ? 4.2 : 5.5,
+      filteredItems.length - renderPos + 1.6
+    );
     pinPoints.push({
-      x: baseLeft + lastRel * stepX + 85,
-      y: baseTop - lastRel * stepY - 35,
+      x: baseLeft + lastRel * stepX + 90,
+      y: baseTop - lastRel * stepY - 38,
+      scale: 0.5,
+      isAnchor: true,
     });
 
     pinPoints.sort((a, b) => a.x - b.x);
@@ -666,10 +764,22 @@ export default function HanglineGallery({
     for (let i = 0; i < pinPoints.length - 1; i++) {
       const p1 = pinPoints[i];
       const p2 = pinPoints[i + 1];
-      const midX = (p1.x + p2.x) / 2;
-      const sag = Math.min(8, Math.hypot(p2.x - p1.x, p2.y - p1.y) * 0.038);
-      const midY = (p1.y + p2.y) / 2 + sag;
-      d += ` Q ${midX.toFixed(1)} ${midY.toFixed(1)} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
+      const spanDist = Math.hypot(dx, dy);
+
+      // Perspective-scaled catenary sag: deeper sag for foreground pins, natural drape across cards
+      const avgScale = (p1.scale + p2.scale) / 2;
+      const baseSag = viewport === "mobile" ? 22 : 30;
+      const sag = Math.max(10, Math.min(38, (spanDist / 120) * baseSag * Math.pow(avgScale, 0.75)));
+
+      // Cubic Bézier U-shaped catenary drape between clips
+      const cp1x = p1.x + dx * 0.28;
+      const cp1y = p1.y + dy * 0.28 + sag * 1.05;
+      const cp2x = p1.x + dx * 0.72;
+      const cp2y = p1.y + dy * 0.72 + sag * 1.05;
+
+      d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
     }
     return d;
   };
@@ -679,7 +789,7 @@ export default function HanglineGallery({
   const displayTotal = String(filteredItems.length).padStart(2, "0");
   const progressRatio =
     filteredItems.length > 1
-      ? Math.max(0, Math.min(1, renderPos / (filteredItems.length - 1)))
+      ? Math.max(0, Math.min(1, activeIndex / (filteredItems.length - 1)))
       : 1;
 
   return (
@@ -691,10 +801,10 @@ export default function HanglineGallery({
       {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
-          <span className="text-xs font-mono uppercase tracking-widest text-base/45 block mb-1">
+          <span className="text-xs sm:text-sm font-mono uppercase tracking-[0.2em] text-base/60 font-semibold block mb-1.5">
             ORIGINAL 3D CLOTHESLINE · CMS ARCHIVE
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-base tracking-tight font-sans">
+          <h2 className="text-3xl sm:text-4xl font-bold text-base tracking-tight font-sans">
             certificates, events &amp; milestones.
           </h2>
         </div>
@@ -1040,17 +1150,31 @@ export default function HanglineGallery({
             <path
               d={wirePath}
               fill="none"
-              stroke="rgba(0,0,0,0.08)"
-              strokeWidth="2.5"
-              transform="translate(0, 5)"
+              stroke="rgba(0,0,0,0.11)"
+              strokeWidth="3.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              transform="translate(0, 6)"
             />
-            {/* Steel wire running through the pegs */}
+            {/* Organic twisted clothesline rope */}
             <path
               d={wirePath}
               fill="none"
               stroke="currentColor"
-              strokeWidth="1.8"
-              className="text-[#3A3730] dark:text-[#9A968E]"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-[#38332A] dark:text-[#A6A094]"
+            />
+            {/* Subtle top specular highlight */}
+            <path
+              d={wirePath}
+              fill="none"
+              stroke="rgba(255,255,255,0.25)"
+              strokeWidth="0.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              transform="translate(0, -0.6)"
             />
           </svg>
 

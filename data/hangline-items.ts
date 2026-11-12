@@ -28,7 +28,7 @@ export const HANGLINE_ITEMS: HanglineItem[] = [
     number: "01",
     title: "B.Sc. in Informatics (S.Kom.)",
     subtitle: "WEST JAKARTA · GRADUATION MILESTONE",
-    specs: "INFORMATICS ENGINEERING · S.KOM. · THESIS DEFENDED · HONORS",
+    specs: "INFORMATICS ENGINEERING · S.KOM. · GPA 3.78/4 · HONORS",
     category: "milestone",
     description:
       "Completed undergraduate studies in Informatics (Sarjana Komputer / S.Kom.), specializing in full-stack software engineering, mobile application architecture, and applied natural language processing.",

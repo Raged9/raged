@@ -125,8 +125,8 @@
 .pass-barcode-column .pass-label { letter-spacing: 0; text-align: center; }
 .pass-barcode { position: absolute; left: -52px; top: 76px; width: 160px; height: 56px; fill: var(--pass-ink); shape-rendering: crispEdges; transform: rotate(90deg); opacity: 0.94; }
 
-.pass-label { display: block; color: var(--pass-ink); text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; font-size: 10px; line-height: 16px; }
-.pass-value { display: block; text-transform: uppercase; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 700; line-height: 16px; }
+.pass-label { display: block; color: var(--pass-ink); text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap; font-size: 11px; font-weight: 600; line-height: 16px; }
+.pass-value { display: block; text-transform: uppercase; white-space: nowrap; font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 700; line-height: 18px; }
 .pass-code { display: block; text-transform: uppercase; white-space: nowrap; letter-spacing: 0.04em; font-size: 24px; font-weight: 700; line-height: 32px; }
 .pass-field { display: grid; grid-template-rows: 16px auto; }
 .pass-field-end { text-align: end; }
@@ -149,7 +149,7 @@
 .pass-route > .pass-city:nth-child(5) { grid-column: 1; grid-row: 3; }
 .pass-route > .pass-city-end { grid-column: 3 / -1; grid-row: 3; }
 .pass-route-arrow { display: block; fill: var(--pass-ink); }
-.pass-city { letter-spacing: 0.02em; font-size: 11px; }
+.pass-city { letter-spacing: 0.02em; font-size: 12px; font-weight: 600; }
 
 .pass-times { display: flex; align-items: flex-end; justify-content: flex-start; gap: 14px; height: 32px; }
 .pass-times .pass-field { grid-template-rows: 16px 16px; }
@@ -240,16 +240,16 @@
 .pass-status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  font-weight: 600;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: rgb(var(--base-rgb) / 0.75);
-  background: rgb(var(--base-rgb) / 0.06);
-  padding: 4px 10px;
+  color: rgb(var(--base-rgb) / 0.85);
+  background: rgb(var(--base-rgb) / 0.08);
+  padding: 6px 14px;
   border-radius: 9999px;
-  border: 1px dashed rgb(var(--base-rgb) / 0.25);
+  border: 1px dashed rgb(var(--base-rgb) / 0.35);
 }
 
 .pass-status-pill::before {
@@ -265,12 +265,12 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  padding: 8px 18px;
   color: var(--base);
-  background: rgb(var(--base-rgb) / 0.07);
-  border: 1px solid rgb(var(--base-rgb) / 0.18);
+  background: rgb(var(--base-rgb) / 0.08);
+  border: 1.5px solid rgb(var(--base-rgb) / 0.25);
   border-radius: 9999px;
-  font: 600 11px/16px "IBM Plex Mono", monospace;
+  font: 700 13px/18px "IBM Plex Mono", monospace;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }

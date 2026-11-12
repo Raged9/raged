@@ -823,11 +823,11 @@ export default function LanyardBadge({
       </div>
 
       {/* Interactive Controls Bar Below Lanyard: Flip Front/Back + Choose Back Photo */}
-      <div className="mt-auto pt-3 flex flex-wrap items-center justify-center gap-2 z-30">
+      <div className="mt-auto pt-3 flex flex-wrap items-center justify-center gap-2.5 z-30">
         <button
           type="button"
           onClick={flipCard}
-          className="inline-flex items-center gap-1.5 text-[11px] font-mono font-semibold text-base/80 hover:text-base bg-surface-muted hover:bg-base/10 border border-base/15 px-3.5 py-1.5 rounded-full transition-all cursor-pointer shadow-xs"
+          className="inline-flex items-center gap-2 text-xs font-mono font-semibold text-base/80 hover:text-base bg-surface-muted hover:bg-base/10 border border-base/15 px-4 py-2 rounded-full transition-all cursor-pointer shadow-xs"
         >
           <RotateCw className="w-3.5 h-3.5" />
           <span>{isFlipped ? "flip to front" : "flip card (back)"}</span>
@@ -839,7 +839,7 @@ export default function LanyardBadge({
             setBackPhotoMode((prev) => (prev === "red" ? "beach" : "red"));
             if (!isFlipped) flipCard();
           }}
-          className="inline-flex items-center gap-1.5 text-[11px] font-mono text-base/60 hover:text-base bg-surface-muted/70 hover:bg-surface-muted border border-base/10 px-3 py-1.5 rounded-full transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 text-xs font-mono text-base/70 hover:text-base bg-surface-muted/70 hover:bg-surface-muted border border-base/10 px-3.5 py-2 rounded-full transition-all cursor-pointer"
           title="Switch back side photo"
         >
           <span>

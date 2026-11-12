@@ -11,7 +11,7 @@ const navLinks = [
   { href: "/#projects", label: "projects" },
   // { href: "/me", label: "me" },
   { href: "/blog", label: "blog" },
-  { href: "/contact", label: "contact" },
+  { href: "/portofolio", label: "portofolio" },
 ];
 
 const socials = [

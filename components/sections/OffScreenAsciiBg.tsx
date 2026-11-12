@@ -372,7 +372,7 @@ function DevaultAsciiTypewriter({ reduceMotion }: { reduceMotion: boolean }) {
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      className="w-[360px] sm:w-[440px] md:w-[500px] h-auto select-none pointer-events-none"
+      className="w-[280px] sm:w-[360px] md:w-[420px] lg:w-[450px] h-auto select-none pointer-events-none"
     />
   );
 }
@@ -620,7 +620,7 @@ function AsciiRollerCoasterPlane({ reduceMotion }: { reduceMotion: boolean }) {
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      className="w-[340px] sm:w-[410px] md:w-[450px] h-auto select-none pointer-events-none"
+      className="w-[280px] sm:w-[350px] md:w-[400px] lg:w-[420px] h-auto select-none pointer-events-none"
     />
   );
 }
@@ -631,15 +631,15 @@ export default function OffScreenAsciiBg() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute -inset-y-16 left-1/2 -translate-x-1/2 w-screen max-w-[1640px] flex items-center justify-between px-1 sm:px-4 lg:px-8 z-0 overflow-hidden"
+      className="pointer-events-none absolute inset-0 left-1/2 -translate-x-1/2 w-screen max-w-[1640px] flex items-end justify-between px-2 sm:px-6 lg:px-12 pb-2 sm:pb-6 z-0 overflow-hidden"
     >
-      {/* Left Background: Pure Classic ASCII Typewriter */}
-      <div className="opacity-95 transition-opacity duration-500 -ml-10 sm:-ml-4 lg:ml-0">
+      {/* Left Background: Pure Classic ASCII Typewriter (Positioned cleanly at left side of polaroids) */}
+      <div className="opacity-90 transition-opacity duration-500 -ml-12 sm:-ml-6 lg:ml-0">
         <DevaultAsciiTypewriter reduceMotion={reduceMotion} />
       </div>
 
-      {/* Right Background: Compact 3D ASCII Paper Airplane (Top Glide -> 360° Loop -> Bottom Glide) */}
-      <div className="opacity-45 sm:opacity-65 lg:opacity-75 transition-opacity duration-500 -mr-10 sm:-mr-4 lg:mr-0">
+      {/* Right Background: Compact 3D ASCII Paper Airplane (Positioned cleanly at right side of polaroids) */}
+      <div className="opacity-45 sm:opacity-65 lg:opacity-75 transition-opacity duration-500 -mr-12 sm:-mr-6 lg:mr-0">
         <AsciiRollerCoasterPlane reduceMotion={reduceMotion} />
       </div>
     </div>

@@ -744,7 +744,7 @@ export default function AdminDashboardPage() {
             }`}
           >
             <FileText className="w-4 h-4" />
-            Profile &amp; CV (/contact)
+            Profile &amp; CV (/portofolio)
           </button>
           <button
             onClick={() => setActiveTab('hangline')}
@@ -1055,16 +1055,16 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         ) : activeTab === 'profile' ? (
-          /* Profile & CV (/contact) CMS Tab */
+          /* Profile & CV (/portofolio) CMS Tab */
           <form onSubmit={handleSaveProfile} className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
               <div>
                 <h1 className="text-3xl font-black tracking-tight text-white uppercase flex items-center gap-2.5">
                   <UserCheck className="w-7 h-7 text-[#A3B899]" />
-                  Profile, Biodata &amp; CV Manager (/contact)
+                  Profile, Biodata &amp; CV Manager (/portofolio)
                 </h1>
                 <p className="text-neutral-400 text-sm mt-1">
-                  Kelola file/link Download CV dan biodata singkat yang ditampilkan di halaman <code className="text-[#A3B899]">/contact</code>.
+                  Kelola file/link Download CV dan biodata singkat yang ditampilkan di halaman <code className="text-[#A3B899]">/portofolio</code>.
                 </p>
               </div>
 
@@ -1167,7 +1167,7 @@ export default function AdminDashboardPage() {
                 <div className="flex items-center gap-2.5 border-b border-neutral-800 pb-3">
                   <UserCheck className="w-5 h-5 text-[#A3B899]" />
                   <h2 className="text-lg font-bold text-white uppercase tracking-tight">
-                    Biodata Singkat (/contact)
+                    Biodata Singkat (/portofolio)
                   </h2>
                 </div>
 
@@ -1322,10 +1322,10 @@ export default function AdminDashboardPage() {
               <div>
                 <h1 className="text-3xl font-black tracking-tight text-white uppercase flex items-center gap-2.5">
                   <Award className="w-7 h-7 text-[#A3B899]" />
-                  Hangline Archive Manager (/contact)
+                  Hangline Archive Manager (/portofolio)
                 </h1>
                 <p className="text-neutral-400 text-sm mt-1">
-                  Kelola kartu sertifikat, lomba, kepanitiaan, dan milestone yang digantung pada fitur Hangline di halaman /contact.
+                  Kelola kartu sertifikat, lomba, kepanitiaan, dan milestone yang digantung pada fitur Hangline di halaman /portofolio.
                 </p>
               </div>
 
