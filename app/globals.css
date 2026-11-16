@@ -1,35 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Borel&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
-@import "./fonts.css";
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @font-face {
-  font-family: SF;
-  src: url("/Inter-VariableFont_opsz,wght.ttf");
-}
-@font-face {
-  font-family: Piazzolla;
-  src: url("/Piazzolla-VariableFont_opsz,wght.ttf");
-}
-@font-face {
-  font-family: "Caveat";
-  src: url("/Caveat-VariableFont_wght.ttf");
-}
-@font-face {
   font-family: "Monocraft";
   src: url("/Monocraft.otf") format("opentype");
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Borel";
-  src: url("/Borel-Regular.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -82,7 +57,7 @@ html.dark {
   body {
     background-color: var(--bg);
     color: var(--base);
-    font-family: "Poppins", sans-serif;
+    font-family: var(--font-poppins), -apple-system, BlinkMacSystemFont, sans-serif;
     letter-spacing: -0.5px;
     min-height: 100vh;
     overflow: visible;
@@ -97,7 +72,7 @@ html.dark {
 }
 
 body {
-  font-family: "Poppins", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-poppins), -apple-system, BlinkMacSystemFont, sans-serif;
   letter-spacing: -0.5px;
   -webkit-font-smoothing: antialiased;
 }
@@ -114,12 +89,12 @@ body {
 
 .serif {
   letter-spacing: -0.5px;
-  font-family: "Caveat", cursive, serif;
+  font-family: var(--font-caveat), cursive, serif;
   -webkit-font-smoothing: antialiased;
 }
 
 .font-borel {
-  font-family: "Borel", cursive !important;
+  font-family: var(--font-borel), "Borel", cursive !important;
   font-weight: 400 !important;
   letter-spacing: normal !important;
   font-feature-settings: "liga" 1, "calt" 1 !important;
@@ -163,11 +138,19 @@ body {
 }
 
 .text-fg\/60 {
-  color: rgb(var(--base-rgb) / 0.6);
+  color: rgb(var(--base-rgb) / 0.72);
 }
 
 .text-fg\/70 {
-  color: rgb(var(--base-rgb) / 0.7);
+  color: rgb(var(--base-rgb) / 0.75);
+}
+
+.text-fg\/75 {
+  color: rgb(var(--base-rgb) / 0.75);
+}
+
+.text-fg\/80 {
+  color: rgb(var(--base-rgb) / 0.8);
 }
 
 .hover\:text-fg:hover {

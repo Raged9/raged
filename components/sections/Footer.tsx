@@ -43,8 +43,8 @@ export default function Footer() {
           {/* Left Column: Direct Info & Editorial Headings */}
           <div className="flex flex-col gap-6">
             <div className="flex">
-              <span className="flex items-center gap-2 text-xs border border-base/15 rounded-full px-3.5 py-1 text-base/70 font-medium">
-                <span className="w-2 h-2 rounded-full bg-base/60 inline-block animate-pulse" />
+              <span className="flex items-center gap-2 text-xs border border-base/15 rounded-full px-3.5 py-1 text-base/80 font-medium">
+                <span className="w-2 h-2 rounded-full bg-base/70 inline-block animate-pulse" />
                 Available for internships & projects
               </span>
             </div>
@@ -53,7 +53,7 @@ export default function Footer() {
               <h2 className="text-base text-2xl sm:text-3xl md:text-4xl font-bold leading-tight tracking-tight">
                 always searching for new problems, fun teams and great ideas.
               </h2>
-              <p className="text-base/60 text-sm sm:text-base leading-relaxed">
+              <p className="text-base/75 text-sm sm:text-base leading-relaxed">
                 have a project idea, inquiry, or just want to discuss software engineering,
                 NLP, or typography? drop a note or reach out directly.
               </p>
@@ -64,7 +64,7 @@ export default function Footer() {
                 href="https://github.com/Raged9"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2.5 text-sm text-fg/70 hover:text-fg transition-colors group font-medium"
+                className="inline-flex items-center gap-2.5 text-sm text-fg/80 hover:text-fg transition-colors group font-medium"
               >
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
                   <path
@@ -77,15 +77,15 @@ export default function Footer() {
                 <ArrowUpRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
               </a>
 
-              <div className="flex items-center gap-2.5 text-sm text-base/70 font-medium">
-                <Mail className="w-4 h-4 text-base/60" />
+              <div className="flex items-center gap-2.5 text-sm text-base/80 font-medium">
+                <Mail className="w-4 h-4 text-base/75" />
                 <span>edgar.edmanata@gmail.com</span>
               </div>
             </div>
 
             {/* Signature Joke (Sentence case, subtle, relaxed) */}
             <div className="mt-4 pt-6 border-t border-base/10">
-              <p className="serif text-base/60 text-lg">
+              <p className="serif text-base/75 text-lg">
                 Powered by JavaScript — dan kopi dari Pulau Jawa.
               </p>
             </div>
@@ -167,7 +167,7 @@ export default function Footer() {
       </div>
 
       {/* Footer Bottom Bar (Moved ABOVE Dino dot matrix) */}
-      <div className="pt-10 flex flex-col sm:flex-row items-center justify-between text-xs text-base/40 gap-4">
+      <div className="pt-10 flex flex-col sm:flex-row items-center justify-between text-xs text-base/70 gap-4">
         <p>© {new Date().getFullYear()} Edgar (&quot;Raged&quot;). All rights reserved.</p>
         <p className="font-mono text-[11px]">Designed in the spirit of Tayo & built with Next.js</p>
       </div>

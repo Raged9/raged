@@ -9,7 +9,6 @@ import {
 } from "@/components/boarding-pass";
 import { motion, useReducedMotion } from "motion/react";
 import { easeOut, viewportOnce } from "@/lib/motion";
-import { RotateCcw } from "lucide-react";
 
 export default function BoardingPassSection() {
   const [progress, setProgress] = useState(0);
@@ -116,7 +115,7 @@ export default function BoardingPassSection() {
         viewport={viewportOnce}
         transition={{ duration: 0.6, ease: easeOut }}
       >
-        <span className="text-xs sm:text-sm uppercase tracking-[0.22em] text-base/60 font-mono font-bold mb-3 block">
+        <span className="text-xs sm:text-sm uppercase tracking-[0.22em] text-base/75 font-mono font-bold mb-3 block">
           Flight Clearance • IT-1030
         </span>
         <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-base leading-tight mb-4">
@@ -140,28 +139,6 @@ export default function BoardingPassSection() {
             onReattach={handleReattach}
           />
         </div>
-
-        {/* Mobile-Friendly Prominent Reattach CTA (shows when ticket stub is detached) */}
-        {detach >= 1 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-6 flex flex-col items-center gap-2 md:hidden z-20"
-          >
-            <button
-              type="button"
-              onClick={handleReattach}
-              className="px-7 py-3.5 rounded-full bg-base text-bg text-sm sm:text-base font-mono font-bold uppercase tracking-wider flex items-center gap-2.5 shadow-xl shadow-black/25 active:scale-95 transition cursor-pointer"
-              aria-label="Reattach ticket stub"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>Reattach Ticket</span>
-            </button>
-            <span className="text-xs font-mono text-base/60 font-medium">
-              Ticket Detached • Tap to reassemble
-            </span>
-          </motion.div>
-        )}
       </div>
     </section>
   );

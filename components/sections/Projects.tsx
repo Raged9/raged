@@ -59,7 +59,7 @@ export default function Projects({ projects }: ProjectsProps) {
   return (
     <section
       id="projects"
-      className="flex flex-col pt-13 pb-16 px-6 md:px-9 relative max-w-304 w-full mx-auto"
+      className="flex flex-col pt-13 pb-16 px-6 md:px-9 relative max-w-304 w-full mx-auto scroll-mt-16 sm:scroll-mt-20 md:scroll-mt-24"
     >
       <motion.h2
         className="text-2xl sm:text-3xl md:text-4xl w-full max-w-4xl text-base font-bold tracking-tight leading-snug"
@@ -88,7 +88,7 @@ export default function Projects({ projects }: ProjectsProps) {
                 className={`py-1.5 sm:py-2 px-3.5 sm:px-5 text-xs sm:text-sm rounded-full font-semibold transition-all duration-300 whitespace-nowrap cursor-pointer shrink-0 ${
                   activeCategory === cat
                     ? "bg-base text-bg shadow-sm"
-                    : "text-fg/50 hover:text-fg"
+                    : "text-fg/75 hover:text-fg"
                 }`}
               >
                 {cat}
@@ -137,6 +137,10 @@ export default function Projects({ projects }: ProjectsProps) {
                           <img
                             src={coverImage}
                             alt={project.title}
+                            width={640}
+                            height={360}
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           />
                           {/* Subtle Hover Overlay */}
@@ -160,7 +164,7 @@ export default function Projects({ projects }: ProjectsProps) {
                           <span className="text-4xl sm:text-5xl font-bold text-base/20 select-none">
                             {project.title.charAt(0)}
                           </span>
-                          <span className="text-xs font-mono text-base/40 mt-1 uppercase tracking-wider">
+                          <span className="text-xs font-mono text-base/70 mt-1 uppercase tracking-wider">
                             {projectTags[0] || ""}
                           </span>
                         </div>
@@ -183,7 +187,7 @@ export default function Projects({ projects }: ProjectsProps) {
                       {project.subtitle || ""}
                     </p>
 
-                    <p className="w-full text-base/65 text-sm line-clamp-3 leading-relaxed mt-1">
+                    <p className="w-full text-base/75 text-sm line-clamp-3 leading-relaxed mt-1">
                       {project.description}
                     </p>
 
@@ -191,13 +195,13 @@ export default function Projects({ projects }: ProjectsProps) {
                       {projectTags.slice(0, 3).map((tag: string) => (
                         <span
                           key={tag}
-                          className="text-[11px] bg-base/5 text-base/70 px-2.5 py-0.5 rounded-full font-medium"
+                          className="text-[11px] bg-base/5 text-base/80 px-2.5 py-0.5 rounded-full font-medium"
                         >
                           {tag}
                         </span>
                       ))}
                       {projectTags.length > 3 && (
-                        <span className="text-[11px] bg-base/5 text-base/50 px-2 py-0.5 rounded-full font-medium">
+                        <span className="text-[11px] bg-base/5 text-base/75 px-2 py-0.5 rounded-full font-medium">
                           +{projectTags.length - 3}
                         </span>
                       )}
@@ -221,8 +225,9 @@ export default function Projects({ projects }: ProjectsProps) {
                     <button
                       type="button"
                       onClick={() => setLightboxState({ project, initialIndex: 0 })}
-                      className="text-fg/50 hover:text-fg transition-colors cursor-pointer"
+                      className="text-fg/70 hover:text-fg transition-colors cursor-pointer"
                       title="View Project Gallery"
+                      aria-label={`View ${project.title} gallery`}
                     >
                       <Images className="w-3.5 h-3.5" />
                     </button>
@@ -232,8 +237,9 @@ export default function Projects({ projects }: ProjectsProps) {
                       href={liveHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-fg/50 hover:text-fg transition-colors"
+                      className="text-fg/70 hover:text-fg transition-colors"
                       title="Live Demo"
+                      aria-label={`${project.title} live demo`}
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
@@ -243,8 +249,9 @@ export default function Projects({ projects }: ProjectsProps) {
                       href={githubHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-fg/50 hover:text-fg transition-colors"
+                      className="text-fg/70 hover:text-fg transition-colors"
                       title="Source Code"
+                      aria-label={`${project.title} source code`}
                     >
                       <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                         <path

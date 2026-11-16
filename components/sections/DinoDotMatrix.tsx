@@ -132,6 +132,7 @@ export default function DinoDotMatrix() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const colsRef = useRef<number>(160);
+  const rectRef = useRef<{ width: number; height: number }>({ width: 1280, height: 320 });
 
   // Mouse hover ripple position
   const mousePosRef = useRef<{ x: number; y: number; active: boolean }>({
@@ -147,7 +148,8 @@ export default function DinoDotMatrix() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let animId: number;
+    let animId = 0;
+    let isVisible = false;
     let lastTime = 0;
     let stepTimer = 0;
     let legTimer = 0;
@@ -177,6 +179,7 @@ export default function DinoDotMatrix() {
       const rect = container.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
+      rectRef.current = { width: rect.width || 1, height: rect.height || 1 };
       canvas.width = Math.floor(rect.width * dpr);
       canvas.height = Math.floor(rect.height * dpr);
       canvas.style.width = `${rect.width}px`;
@@ -189,60 +192,62 @@ export default function DinoDotMatrix() {
     resize();
     window.addEventListener("resize", resize);
 
-    const render = (time: number) => {
-      const delta = time - lastTime;
+    const drawFrame = (time: number, advanceSim = true) => {
+      const delta = lastTime ? Math.min(100, time - lastTime) : 16;
       lastTime = time;
 
       const currentCols = colsRef.current;
       const cloudSpacing = Math.max(75, Math.floor(currentCols / 2.3));
 
-      stepTimer += delta;
-      legTimer += delta;
-      cloudTimer += delta;
+      if (advanceSim) {
+        stepTimer += delta;
+        legTimer += delta;
+        cloudTimer += delta;
 
-      // Move ground and obstacles
-      if (stepTimer >= 80) {
-        stepTimer = 0;
-        scrollX = (scrollX + 1) % 1000;
+        // Move ground and obstacles
+        if (stepTimer >= 80) {
+          stepTimer = 0;
+          scrollX = (scrollX + 1) % 1000;
 
-        // Advance obstacles
-        for (const obs of obstacles) {
-          obs.x -= 1;
-          if (obs.x < -22) {
-            const maxX = Math.max(...obstacles.map((k) => k.x));
-            const minSpacing = Math.max(38, Math.floor(currentCols * 0.28));
-            obs.x = Math.max(currentCols + 10, maxX + minSpacing + Math.floor(Math.random() * 25));
-            const rand = Math.random();
-            obs.type = rand < 0.4 ? "single" : rand < 0.75 ? "double" : "small";
+          // Advance obstacles
+          for (const obs of obstacles) {
+            obs.x -= 1;
+            if (obs.x < -22) {
+              const maxX = Math.max(...obstacles.map((k) => k.x));
+              const minSpacing = Math.max(38, Math.floor(currentCols * 0.28));
+              obs.x = Math.max(currentCols + 10, maxX + minSpacing + Math.floor(Math.random() * 25));
+              const rand = Math.random();
+              obs.type = rand < 0.4 ? "single" : rand < 0.75 ? "double" : "small";
+            }
           }
         }
-      }
 
-      // Leg animation: toggle running frames every 120ms
-      if (legTimer >= 120) {
-        legTimer = 0;
-        legFrame = (legFrame + 1) % 2;
-      }
+        // Leg animation: toggle running frames every 120ms
+        if (legTimer >= 120) {
+          legTimer = 0;
+          legFrame = (legFrame + 1) % 2;
+        }
 
-      // Cloud drift: all clouds drift at the exact same uniform speed so they NEVER bunch up/overlap
-      if (cloudTimer >= 100) {
-        cloudTimer = 0;
-        for (const cl of clouds) {
-          cl.x -= 0.35;
-          if (cl.x < -24) {
-            const maxX = Math.max(...clouds.map((k) => k.x));
-            cl.x = Math.max(currentCols + 15, maxX + cloudSpacing);
-            // Cycle between large, medium, small
-            const rand = Math.random();
-            if (rand < 0.35) {
-              cl.type = "large";
-              cl.y = 2;
-            } else if (rand < 0.7) {
-              cl.type = "medium";
-              cl.y = 3;
-            } else {
-              cl.type = "small";
-              cl.y = 4;
+        // Cloud drift: all clouds drift at the exact same uniform speed so they NEVER bunch up/overlap
+        if (cloudTimer >= 100) {
+          cloudTimer = 0;
+          for (const cl of clouds) {
+            cl.x -= 0.35;
+            if (cl.x < -24) {
+              const maxX = Math.max(...clouds.map((k) => k.x));
+              cl.x = Math.max(currentCols + 15, maxX + cloudSpacing);
+              // Cycle between large, medium, small
+              const rand = Math.random();
+              if (rand < 0.35) {
+                cl.type = "large";
+                cl.y = 2;
+              } else if (rand < 0.7) {
+                cl.type = "medium";
+                cl.y = 3;
+              } else {
+                cl.type = "small";
+                cl.y = 4;
+              }
             }
           }
         }
@@ -343,8 +348,8 @@ export default function DinoDotMatrix() {
       const dinoY = GROUND_Y - dinoSprite.length;
       drawSprite(dinoSprite, dinoX, dinoY);
 
-      // 5. Render dots on Canvas
-      const rect = canvas.getBoundingClientRect();
+      // 5. Render dots on Canvas using cached rect dimensions & batched paths (zero forced reflow)
+      const rect = rectRef.current;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const cellW = canvas.width / currentCols;
@@ -358,53 +363,95 @@ export default function DinoDotMatrix() {
       const dotOnColor = isDarkMode ? "#ECE8E1" : "#18181b";
       const dotOffColor = isDarkMode ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)";
 
+      // Batch 1: Faint background dots
+      ctx.beginPath();
       for (let r = 0; r < ROWS; r++) {
+        const cy = (r + 0.5) * cellH;
         for (let c = 0; c < currentCols; c++) {
           const isDark = grid[r * currentCols + c] === 1;
-          const cx = (c + 0.5) * cellW;
-          const cy = (r + 0.5) * cellH;
-
-          // Interactive 5-pixel '+' cursor: tengah, atas, bawah, kiri, kanan
           const isCursorPlus =
             mouse.active &&
-            ((c === mc && r === mr) || // tengah
-              (c === mc && r === mr - 1) || // atas
-              (c === mc && r === mr + 1) || // bawah
-              (c === mc - 1 && r === mr) || // kiri
-              (c === mc + 1 && r === mr)); // kanan
-
-          ctx.beginPath();
-          ctx.arc(cx, cy, isCursorPlus ? dotRadius * 1.35 : dotRadius, 0, Math.PI * 2);
-
-          if (isCursorPlus) {
-            ctx.fillStyle = dotOnColor; // Active 5-pixel cross dot
-          } else if (isDark) {
-            ctx.fillStyle = dotOnColor;
-          } else {
-            ctx.fillStyle = dotOffColor;
+            ((c === mc && r === mr) ||
+              (c === mc && r === mr - 1) ||
+              (c === mc && r === mr + 1) ||
+              (c === mc - 1 && r === mr) ||
+              (c === mc + 1 && r === mr));
+          if (!isDark && !isCursorPlus) {
+            const cx = (c + 0.5) * cellW;
+            ctx.moveTo(cx + dotRadius, cy);
+            ctx.arc(cx, cy, dotRadius, 0, Math.PI * 2);
           }
-          ctx.fill();
         }
       }
+      ctx.fillStyle = dotOffColor;
+      ctx.fill();
 
-      animId = requestAnimationFrame(render);
+      // Batch 2: Active dark dots & cursor plus
+      ctx.beginPath();
+      for (let r = 0; r < ROWS; r++) {
+        const cy = (r + 0.5) * cellH;
+        for (let c = 0; c < currentCols; c++) {
+          const isDark = grid[r * currentCols + c] === 1;
+          const isCursorPlus =
+            mouse.active &&
+            ((c === mc && r === mr) ||
+              (c === mc && r === mr - 1) ||
+              (c === mc && r === mr + 1) ||
+              (c === mc - 1 && r === mr) ||
+              (c === mc + 1 && r === mr));
+          if (isDark || isCursorPlus) {
+            const cx = (c + 0.5) * cellW;
+            const rad = isCursorPlus ? dotRadius * 1.35 : dotRadius;
+            ctx.moveTo(cx + rad, cy);
+            ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+          }
+        }
+      }
+      ctx.fillStyle = dotOnColor;
+      ctx.fill();
     };
 
-    animId = requestAnimationFrame(render);
+    const renderLoop = (time: number) => {
+      if (!isVisible) return;
+      drawFrame(time, true);
+      animId = requestAnimationFrame(renderLoop);
+    };
+
+    // Draw one initial frame immediately, then only animate while visible in viewport
+    drawFrame(0, false);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry?.isIntersecting) {
+          if (!isVisible) {
+            isVisible = true;
+            lastTime = 0;
+            animId = requestAnimationFrame(renderLoop);
+          }
+        } else {
+          isVisible = false;
+          if (animId) {
+            cancelAnimationFrame(animId);
+            animId = 0;
+          }
+        }
+      },
+      { rootMargin: "120px" }
+    );
+    observer.observe(container);
 
     return () => {
-      cancelAnimationFrame(animId);
+      observer.disconnect();
+      if (animId) cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
     };
   }, []);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
     mousePosRef.current = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: e.nativeEvent.offsetX,
+      y: e.nativeEvent.offsetY,
       active: true,
     };
   }, []);
@@ -419,7 +466,7 @@ export default function DinoDotMatrix() {
       <div className="w-full max-w-304 mx-auto px-6 sm:px-9 pb-3 flex items-center justify-between text-xs font-mono">
         <div className="flex items-center gap-2">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-semibold tracking-wider uppercase text-[11px] text-base/40">
+          <span className="font-semibold tracking-wider uppercase text-[11px] text-base/70">
             Chrome Dino Runner
           </span>
         </div>

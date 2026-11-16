@@ -4,20 +4,12 @@ import React, { useState, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import localFont from "next/font/local";
 import { easeOut, fadeUp, staggerChildren } from "@/lib/motion";
 import PixelDotGrid from "./PixelDotGrid";
 import { Project } from "@/types";
 import { Sparkles, Images } from "lucide-react";
 import ProjectLightbox, { getProjectImages } from "@/components/ProjectLightbox";
 import { api } from "@/lib/api-client";
-
-const borel = localFont({
-  src: "../../public/Borel-Regular.ttf",
-  weight: "400",
-  style: "normal",
-  display: "swap",
-});
 
 interface HeroProps {
   projects?: Project[];
@@ -106,7 +98,7 @@ export default function Hero({ projects = [] }: HeroProps) {
           >
             <span className="inline-flex flex-wrap items-center align-baseline">
               <span
-                className={`${borel.className} font-normal text-3xl sm:text-[34px] text-base mr-2.5 leading-none inline-block relative top-[0.29em]`}
+                className="font-borel font-normal text-3xl sm:text-[34px] text-base mr-2.5 leading-none inline-block relative top-[0.29em]"
                 style={{ letterSpacing: "normal" }}
               >
                 hello,
@@ -118,7 +110,7 @@ export default function Hero({ projects = [] }: HeroProps) {
                 width={120}
                 height={120}
                 priority
-                className="size-8 sm:size-9 md:size-10 border-3 border-white rounded-xl shadow-[0px_6px_6px_0px_#00000015] inline-block -rotate-7 mx-2 object-cover overflow-hidden shrink-0"
+                className="size-8 sm:size-9 md:size-10 border-[3px] border-white rounded-xl shadow-[0px_6px_6px_0px_#00000015] inline-block -rotate-6 mx-2 object-cover overflow-hidden shrink-0"
               />
               <span>edgar.</span>
             </span>
@@ -131,7 +123,7 @@ export default function Hero({ projects = [] }: HeroProps) {
           <motion.p
             variants={fadeUp}
             transition={{ duration: 0.7, ease: easeOut }}
-            className="mt-3.5 sm:mt-4 text-base/70 text-sm sm:text-[14px] leading-relaxed max-w-xl font-normal"
+            className="mt-3.5 sm:mt-4 text-base/75 text-sm sm:text-[14px] leading-relaxed max-w-xl font-normal"
           >
             i build things with code - from scalable management systems to tactile web experiences.
           </motion.p>
@@ -149,10 +141,10 @@ export default function Hero({ projects = [] }: HeroProps) {
               welcome to my world
             </Link>
             <Link
-              href="#boarding-pass"
-              className="py-3 px-4 min-h-11 rounded-[13px] text-[14px] font-medium text-fg/60 bg-surface-muted hover:bg-base/10 hover:text-fg transition-all duration-200 flex items-center"
+              href="/portofolio"
+              className="py-3 px-4 min-h-11 rounded-[13px] text-[14px] font-medium text-fg/80 bg-surface-muted hover:bg-base/10 hover:text-fg border border-base/10 shadow-md shadow-black/8 hover:shadow-lg hover:shadow-black/12 transition-all duration-200 flex items-center"
             >
-              boarding pass →
+              portofolio →
             </Link>
           </motion.div>
         </motion.div>
@@ -197,6 +189,9 @@ export default function Hero({ projects = [] }: HeroProps) {
                 <img
                   src={coverImage}
                   alt={item.title}
+                  width={480}
+                  height={288}
+                  decoding="async"
                   className="h-full w-auto object-cover block"
                 />
                 {itemImages.length > 1 && (

@@ -62,7 +62,7 @@ export default function Navbar() {
               <Link
                 key={l.href}
                 href={l.href}
-                className="inline-block origin-center text-fg/50 hover:text-fg hover:scale-110 transition-all duration-200 text-sm tracking-[-0.5px]"
+                className="inline-block origin-center text-fg/70 hover:text-fg hover:scale-110 transition-all duration-200 text-sm tracking-[-0.5px]"
               >
                 {l.label}
               </Link>
@@ -84,6 +84,7 @@ export default function Navbar() {
                 href={s.href}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label={s.label}
                 whileHover={{ scale: 1.1, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center justify-center"
@@ -92,7 +93,7 @@ export default function Navbar() {
                   icon={s.icon}
                   size={18}
                   strokeWidth={1.7}
-                  className="text-fg/50 hover:text-fg transition-colors duration-300"
+                  className="text-fg/70 hover:text-fg transition-colors duration-300"
                 />
               </motion.a>
             ))}
@@ -179,9 +180,10 @@ export default function Navbar() {
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={s.label}
                   className="min-w-11 min-h-11 flex items-center justify-center"
                 >
-                  <HugeiconsIcon icon={s.icon} size={22} strokeWidth={2} className="text-base/60" />
+                  <HugeiconsIcon icon={s.icon} size={22} strokeWidth={2} className="text-base/75" />
                 </a>
               ))}
             </div>

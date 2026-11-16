@@ -50,6 +50,10 @@ function PolaroidFace({
         <img
           src={photo.imageUrl}
           alt={photo.caption}
+          width={240}
+          height={240}
+          loading="lazy"
+          decoding="async"
           draggable={false}
           className="w-full h-full object-cover"
         />
@@ -170,11 +174,11 @@ export default function OffScreen({ initialPhotos = [] }: OffScreenProps) {
       <div className="relative z-10 flex w-full flex-col items-center">
         {/* Title placed in the open empty space between the left and right ASCII art */}
         <div className="w-full flex flex-col items-center justify-center mb-8 sm:mb-12 text-center">
-          <span className="text-xs sm:text-sm font-mono uppercase tracking-[0.25em] text-base/60 font-bold mb-2">
+          <span className="text-xs sm:text-sm font-mono uppercase tracking-[0.25em] text-base/75 font-bold mb-2">
             analog moments & life
           </span>
           <h2 className="serif text-4xl sm:text-5xl md:text-6xl font-bold text-base tracking-tight leading-none">
-            off screen<span className="text-base/30">.</span>
+            off screen<span className="text-base/40">.</span>
           </h2>
         </div>
 
@@ -312,7 +316,7 @@ export default function OffScreen({ initialPhotos = [] }: OffScreenProps) {
               </button>
             </div>
 
-            <span className="text-xs font-mono uppercase tracking-widest text-base/50 flex items-center gap-1 pt-1 font-medium">
+            <span className="text-xs font-mono uppercase tracking-widest text-base/70 flex items-center gap-1 pt-1 font-medium">
               <span>Tap foto untuk lanjut</span>
             </span>
           </div>

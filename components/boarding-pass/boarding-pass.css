@@ -240,22 +240,22 @@
 .pass-status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  font-size: 11px;
+  gap: 8px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: rgb(var(--base-rgb) / 0.85);
   background: rgb(var(--base-rgb) / 0.08);
-  padding: 6px 14px;
+  padding: 8px 16px;
   border-radius: 9999px;
   border: 1px dashed rgb(var(--base-rgb) / 0.35);
 }
 
 .pass-status-pill::before {
   content: '';
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #f97316;
   box-shadow: 0 0 6px rgba(249, 115, 22, 0.6);
@@ -264,15 +264,55 @@
 .pass-actions .pass-reset {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
+  gap: 9px;
+  padding: 10px 22px;
   color: var(--base);
   background: rgb(var(--base-rgb) / 0.08);
   border: 1.5px solid rgb(var(--base-rgb) / 0.25);
   border-radius: 9999px;
-  font: 700 13px/18px "IBM Plex Mono", monospace;
+  font: 700 15px/20px "IBM Plex Mono", monospace;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pass-actions .pass-reset svg {
+  width: 17px;
+  height: 17px;
+}
+
+@media (max-width: 767px) {
+  [data-pass-region='pass-actions'] {
+    top: 294px;
+    height: 68px;
+  }
+
+  .pass-actions {
+    height: 68px;
+    gap: 16px;
+  }
+
+  .pass-status-pill {
+    font-size: 18px;
+    padding: 11px 20px;
+    gap: 10px;
+  }
+
+  .pass-status-pill::before {
+    width: 9px;
+    height: 9px;
+  }
+
+  .pass-actions .pass-reset {
+    font: 700 22px/26px "IBM Plex Mono", monospace;
+    padding: 14px 28px;
+    gap: 12px;
+    border-width: 2px;
+  }
+
+  .pass-actions .pass-reset svg {
+    width: 22px;
+    height: 22px;
+  }
 }
 
 .boarding-pass[data-detached='true'] .pass-reset {

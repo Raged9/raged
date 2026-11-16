@@ -141,6 +141,7 @@ const PATTERN_NAMES = [
 
 export default function PixelDotGrid() {
   const [patternIndex, setPatternIndex] = useState(0);
+  const [isDesktop, setIsDesktop] = useState(false);
   const patternIndexRef = useRef(0);
 
   const gridRef = useRef<HTMLDivElement>(null);
@@ -150,6 +151,14 @@ export default function PixelDotGrid() {
   const lastPosRef = useRef<{ x: number; y: number } | null>(null);
 
   const morphCleanupRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    setIsDesktop(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   // Switch to next pattern with smooth transition ONLY on changed dots, then clear inline transitions
   // so theme switching (html.dark) never triggers 1,024 simultaneous CSS transitions!
@@ -197,15 +206,16 @@ export default function PixelDotGrid() {
     }
   }, []);
 
-  // 5-second automatic rotation between the 3 patterns
+  // 5-second automatic rotation between the 3 patterns (only active on desktop where grid is visible)
   useEffect(() => {
+    if (!isDesktop) return;
     const timer = setInterval(() => {
       const next = (patternIndexRef.current + 1) % MATRICES.length;
       switchPattern(next);
     }, 5000);
 
     return () => clearInterval(timer);
-  }, [switchPattern]);
+  }, [switchPattern, isDesktop]);
 
   // Smoothly schedule fade back to current pattern base color
   const scheduleFade = useCallback((idx: number, isDark: boolean) => {
@@ -378,6 +388,10 @@ export default function PixelDotGrid() {
   }, []);
 
   const activeDark = MATRICES[patternIndex];
+
+  if (!isDesktop) {
+    return null;
+  }
 
   return (
     <div className="relative flex items-center justify-center select-none bg-transparent touch-none">

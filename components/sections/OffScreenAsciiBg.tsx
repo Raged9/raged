@@ -46,6 +46,8 @@ function DevaultAsciiTypewriter({ reduceMotion }: { reduceMotion: boolean }) {
     let seamFillCells: (SampledPixel | null)[] | null = null;
     let animId = 0;
     let isCancelled = false;
+    let isVisible = false;
+    let lastDrawTime = -100;
 
     const img = new window.Image();
     img.crossOrigin = "anonymous";
@@ -216,10 +218,13 @@ function DevaultAsciiTypewriter({ reduceMotion }: { reduceMotion: boolean }) {
 
       cells = parsed;
       seamFillCells = fillMap;
-      renderFrame(0);
+      drawSingleFrame(0);
+      if (isVisible && !reduceMotion) {
+        animId = window.requestAnimationFrame(renderFrame);
+      }
     };
 
-    const renderFrame = (timeMs: number) => {
+    const drawSingleFrame = (timeMs: number) => {
       if (isCancelled || !canvas || !cells || !seamFillCells) return;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
@@ -356,14 +361,43 @@ function DevaultAsciiTypewriter({ reduceMotion }: { reduceMotion: boolean }) {
       }
 
       ctx.restore();
+    };
 
-      if (!reduceMotion) {
+    const renderFrame = (timeMs: number) => {
+      if (isCancelled || !isVisible) return;
+      if (timeMs - lastDrawTime >= 42) {
+        lastDrawTime = timeMs;
+        drawSingleFrame(timeMs);
+      }
+      if (!reduceMotion && isVisible) {
         animId = window.requestAnimationFrame(renderFrame);
       }
     };
 
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          if (!isVisible) {
+            isVisible = true;
+            if (!reduceMotion && cells) {
+              animId = window.requestAnimationFrame(renderFrame);
+            }
+          }
+        } else {
+          isVisible = false;
+          if (animId) {
+            window.cancelAnimationFrame(animId);
+            animId = 0;
+          }
+        }
+      },
+      { rootMargin: "120px" }
+    );
+    observer.observe(canvas);
+
     return () => {
       isCancelled = true;
+      observer.disconnect();
       if (animId) window.cancelAnimationFrame(animId);
     };
   }, [reduceMotion]);
@@ -415,6 +449,8 @@ function AsciiRollerCoasterPlane({ reduceMotion }: { reduceMotion: boolean }) {
     const ibuf = new Float32Array(COLS * ROWS);
     let animId = 0;
     let isCancelled = false;
+    let isVisible = false;
+    let lastDrawTime = -100;
 
     const localVerts: Vec3[] = [
       [0, 0.04, 1.65],      // 0: Sharp pointed nose tip
@@ -602,16 +638,45 @@ function AsciiRollerCoasterPlane({ reduceMotion }: { reduceMotion: boolean }) {
       }
 
       ctx.restore();
+    };
 
-      if (!reduceMotion) {
-        animId = window.requestAnimationFrame(renderFrame);
+    const renderLoop = (timeMs: number) => {
+      if (isCancelled || !isVisible) return;
+      if (timeMs - lastDrawTime >= 34) {
+        lastDrawTime = timeMs;
+        renderFrame(timeMs);
+      }
+      if (!reduceMotion && isVisible) {
+        animId = window.requestAnimationFrame(renderLoop);
       }
     };
 
     renderFrame(0);
 
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          if (!isVisible) {
+            isVisible = true;
+            if (!reduceMotion) {
+              animId = window.requestAnimationFrame(renderLoop);
+            }
+          }
+        } else {
+          isVisible = false;
+          if (animId) {
+            window.cancelAnimationFrame(animId);
+            animId = 0;
+          }
+        }
+      },
+      { rootMargin: "120px" }
+    );
+    observer.observe(canvas);
+
     return () => {
       isCancelled = true;
+      observer.disconnect();
       if (animId) window.cancelAnimationFrame(animId);
     };
   }, [reduceMotion]);

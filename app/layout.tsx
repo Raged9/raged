@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins, Caveat, IBM_Plex_Mono } from "next/font/google";
+import { Poppins, Caveat, IBM_Plex_Mono, Anton, Press_Start_2P, Borel } from "next/font/google";
 import Cursor from "@/components/Cursor";
 import CloudTransition from "@/components/boarding-pass/CloudTransition";
 import "./globals.css";
@@ -25,6 +25,29 @@ const ibmPlexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
+const borel = Borel({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-borel",
+  display: "swap",
+});
+
+const anton = Anton({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-anton",
+  display: "swap",
+  preload: false,
+});
+
+const pressStart2P = Press_Start_2P({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-press-start",
+  display: "swap",
+  preload: false,
+});
+
 export const metadata: Metadata = {
   title: "edgar.",
   description:
@@ -43,7 +66,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${poppins.variable} ${caveat.variable} ${ibmPlexMono.variable} scroll-smooth`}
+      className={`${poppins.variable} ${caveat.variable} ${ibmPlexMono.variable} ${borel.variable} ${anton.variable} ${pressStart2P.variable} scroll-smooth`}
     >
       <head>
         <script
