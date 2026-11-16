@@ -47,11 +47,11 @@ function DevaultAsciiTypewriter({ reduceMotion }: { reduceMotion: boolean }) {
     let animId = 0;
     let isCancelled = false;
     let isVisible = false;
+    let imageRequested = false;
     let lastDrawTime = -100;
 
     const img = new window.Image();
     img.crossOrigin = "anonymous";
-    img.src = "/ascii-typewriter.png";
 
     /**
      * Exact pixel-verified carriage boundary (from the 112x54 pixel dump of ascii-typewriter.png):
@@ -377,6 +377,10 @@ function DevaultAsciiTypewriter({ reduceMotion }: { reduceMotion: boolean }) {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
+          if (!imageRequested) {
+            imageRequested = true;
+            img.src = "/ascii-typewriter.png";
+          }
           if (!isVisible) {
             isVisible = true;
             if (!reduceMotion && cells) {
@@ -391,7 +395,7 @@ function DevaultAsciiTypewriter({ reduceMotion }: { reduceMotion: boolean }) {
           }
         }
       },
-      { rootMargin: "120px" }
+      { rootMargin: "300px" }
     );
     observer.observe(canvas);
 

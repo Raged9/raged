@@ -135,41 +135,79 @@ export interface ProfileSettings {
   updatedAt?: string;
 }
 
+let projectsCachePromise: Promise<ProjectItem[]> | null = null;
+let projectsCacheTime = 0;
+let photosCachePromise: Promise<OffScreenPhotoItem[]> | null = null;
+let photosCacheTime = 0;
+const CLIENT_CACHE_TTL_MS = 30_000;
+
 export const api = {
   // Health
   checkHealth: () =>
     apiFetch<{ status: string; service: string; storage?: string }>("/api/health"),
 
-  // Projects
-  getProjects: () => apiFetch<ProjectItem[]>("/api/projects"),
+  // Projects (deduplicated across Hero & Projects sections to prevent double 280KB fetch)
+  getProjects: () => {
+    const now = Date.now();
+    if (projectsCachePromise && now - projectsCacheTime < CLIENT_CACHE_TTL_MS) {
+      return projectsCachePromise;
+    }
+    projectsCacheTime = now;
+    projectsCachePromise = apiFetch<ProjectItem[]>("/api/projects").catch((err) => {
+      projectsCachePromise = null;
+      throw err;
+    });
+    return projectsCachePromise;
+  },
   getProject: (id: string) => apiFetch<ProjectItem>(`/api/projects/${id}`),
-  createProject: (data: Partial<ProjectItem>) =>
-    apiFetch<ProjectItem>("/api/projects", {
+  createProject: (data: Partial<ProjectItem>) => {
+    projectsCachePromise = null;
+    return apiFetch<ProjectItem>("/api/projects", {
       method: "POST",
       body: JSON.stringify(data),
-    }),
-  updateProject: (id: string, data: Partial<ProjectItem>) =>
-    apiFetch<ProjectItem>(`/api/projects/${id}`, {
+    });
+  },
+  updateProject: (id: string, data: Partial<ProjectItem>) => {
+    projectsCachePromise = null;
+    return apiFetch<ProjectItem>(`/api/projects/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
-    }),
-  deleteProject: (id: string) =>
-    apiFetch<{ success: boolean; message: string }>(`/api/projects/${id}`, {
+    });
+  },
+  deleteProject: (id: string) => {
+    projectsCachePromise = null;
+    return apiFetch<{ success: boolean; message: string }>(`/api/projects/${id}`, {
       method: "DELETE",
-    }),
+    });
+  },
 
-  // Off-Screen Photos
-  getPhotos: () => apiFetch<OffScreenPhotoItem[]>("/api/photos"),
-  updatePhoto: (id: string, data: Partial<OffScreenPhotoItem>) =>
-    apiFetch<OffScreenPhotoItem>(`/api/photos/${id}`, {
+  // Off-Screen Photos (deduplicated)
+  getPhotos: () => {
+    const now = Date.now();
+    if (photosCachePromise && now - photosCacheTime < CLIENT_CACHE_TTL_MS) {
+      return photosCachePromise;
+    }
+    photosCacheTime = now;
+    photosCachePromise = apiFetch<OffScreenPhotoItem[]>("/api/photos").catch((err) => {
+      photosCachePromise = null;
+      throw err;
+    });
+    return photosCachePromise;
+  },
+  updatePhoto: (id: string, data: Partial<OffScreenPhotoItem>) => {
+    photosCachePromise = null;
+    return apiFetch<OffScreenPhotoItem>(`/api/photos/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
-    }),
-  updateAllPhotos: (photos: OffScreenPhotoItem[]) =>
-    apiFetch<OffScreenPhotoItem[]>("/api/photos", {
+    });
+  },
+  updateAllPhotos: (photos: OffScreenPhotoItem[]) => {
+    photosCachePromise = null;
+    return apiFetch<OffScreenPhotoItem[]>("/api/photos", {
       method: "PUT",
       body: JSON.stringify({ photos }),
-    }),
+    });
+  },
 
   // Typing Game
   getTypingLeaderboard: (limit: number = 10) =>

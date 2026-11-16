@@ -398,6 +398,7 @@ export default function PixelDotGrid() {
       {/* 32x32 Dot Matrix Pixel Art */}
       <div
         ref={gridRef}
+        role="img"
         onPointerMove={handlePointerMove}
         onPointerLeave={handleGridPointerLeave}
         className="grid select-none cursor-crosshair p-2"

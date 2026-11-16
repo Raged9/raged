@@ -83,11 +83,11 @@ export default function Hero({ projects = [] }: HeroProps) {
     >
       {/* Top Part: Intro Text + Pixel Dot Grid */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-12 lg:gap-14 w-full">
-        {/* Left Column: Text content */}
+        {/* Left Column: Text content — rendered immediately at opacity:1 for instant FCP & LCP (0ms render delay) */}
         <motion.div
           className="flex flex-col flex-1 max-w-xl"
           variants={staggerChildren(0.12)}
-          initial={reduceMotion ? false : "hidden"}
+          initial={false}
           animate="visible"
         >
           {/* Headline: hello, i'm [frame avatar] edgar. an informatics student and builder. */}
@@ -191,6 +191,7 @@ export default function Hero({ projects = [] }: HeroProps) {
                   alt={item.title}
                   width={480}
                   height={288}
+                  loading={i < 2 ? "eager" : "lazy"}
                   decoding="async"
                   className="h-full w-auto object-cover block"
                 />

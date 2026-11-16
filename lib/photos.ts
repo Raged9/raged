@@ -28,9 +28,15 @@ export async function getOffScreenPhotos(): Promise<OffScreenPhoto[]> {
     });
     clearTimeout(timeoutId);
     if (res.ok) {
-      const data = await res.json();
+      const data: OffScreenPhoto[] = await res.json();
       if (Array.isArray(data) && data.length > 0) {
-        return data;
+        return data.map((photo) => ({
+          ...photo,
+          imageUrl:
+            photo.imageUrl && photo.imageUrl.startsWith("data:") && photo.imageUrl.length > 4096
+              ? ""
+              : photo.imageUrl,
+        }));
       }
     }
   } catch {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { OffScreenPhoto } from "@/types";
 import {
@@ -124,20 +124,35 @@ function PolaroidFace({
 }
 
 export default function OffScreen({ initialPhotos = [] }: OffScreenProps) {
+  const sectionRef = useRef<HTMLElement | null>(null);
   const [livePhotos, setLivePhotos] = useState<OffScreenPhoto[]>(initialPhotos);
   const [hovered, setHovered] = useState<number | null>(null);
   const [activeStackIndex, setActiveStackIndex] = useState(0);
   const reduceMotion = Boolean(useReducedMotion());
 
   useEffect(() => {
-    api
-      .getPhotos()
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setLivePhotos(data);
+    const el = sectionRef.current;
+    if (!el) return;
+    let fetched = false;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !fetched) {
+          fetched = true;
+          observer.disconnect();
+          api
+            .getPhotos()
+            .then((data) => {
+              if (Array.isArray(data) && data.length > 0) {
+                setLivePhotos(data);
+              }
+            })
+            .catch(() => {});
         }
-      })
-      .catch(() => {});
+      },
+      { rootMargin: "350px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   const photos =
@@ -167,7 +182,10 @@ export default function OffScreen({ initialPhotos = [] }: OffScreenProps) {
   const currentPhoto = photos[activeStackIndex % photos.length];
 
   return (
-    <section className="relative flex flex-col max-w-4xl w-full p-6 sm:p-7 mx-auto justify-center items-center py-16 sm:py-24 select-none">
+    <section
+      ref={sectionRef}
+      className="relative flex flex-col max-w-4xl w-full p-6 sm:p-7 mx-auto justify-center items-center py-16 sm:py-24 select-none"
+    >
       {/* Ambient Classic ASCII Animations (Left: Vintage Typewriter, Right: Orbiting Paper Airplane) */}
       <OffScreenAsciiBg />
 

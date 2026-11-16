@@ -62,6 +62,7 @@ export default function Navbar() {
               <Link
                 key={l.href}
                 href={l.href}
+                prefetch={l.href === "/blog" ? false : undefined}
                 className="inline-block origin-center text-fg/70 hover:text-fg hover:scale-110 transition-all duration-200 text-sm tracking-[-0.5px]"
               >
                 {l.label}
@@ -164,6 +165,7 @@ export default function Navbar() {
                 >
                   <Link
                     href={l.href}
+                    prefetch={l.href === "/blog" ? false : undefined}
                     onClick={() => setOpen(false)}
                     className="text-3xl font-semibold text-fg/70 hover:text-fg transition-colors"
                   >

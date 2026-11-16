@@ -6,23 +6,24 @@ import "./globals.css";
 
 const poppins = Poppins({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-poppins",
   display: "swap",
 });
 
 const caveat = Caveat({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  weight: ["400", "700"],
   variable: "--font-caveat",
   display: "swap",
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600", "700"],
   variable: "--font-mono",
   display: "swap",
+  preload: false,
 });
 
 const borel = Borel({
@@ -69,6 +70,15 @@ export default function RootLayout({
       className={`${poppins.variable} ${caveat.variable} ${ibmPlexMono.variable} ${borel.variable} ${anton.variable} ${pressStart2P.variable} scroll-smooth`}
     >
       <head>
+        <link
+          rel="preconnect"
+          href="https://raged-backend-aupn.onrender.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          rel="dns-prefetch"
+          href="https://raged-backend-aupn.onrender.com"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `try{var t=localStorage.getItem("edgar-theme");if(t==="dark"){document.documentElement.classList.add("dark");document.documentElement.setAttribute("data-theme","dark");}else{document.documentElement.classList.remove("dark");document.documentElement.setAttribute("data-theme","light");}}catch(e){}`,
